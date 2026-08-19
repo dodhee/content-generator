@@ -9,11 +9,13 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
+    "skipLibCheck": true,
     "paths": {
       "@/*": ["./src/*"],
       "~/*": ["./src/*"]
-    }
+    },
+    "types": ["astro/client", "vite/client"]
   },
-  "include": ["src/**/*", "astro.config.mjs", "functions/**/*", "db/**/*"],
+  "include": ["src/**/*", "astro.config.mjs", "db/**/*", "functions/**/*"],
   "exclude": ["node_modules", "dist", ".astro"]
 }
