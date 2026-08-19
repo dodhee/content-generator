@@ -10,8 +10,8 @@
 | Fase | Deskripsi | Status | Catatan |
 |------|-----------|--------|---------|
 | 0 | PRD, ARCHITECTURE, TASK_LIST | ✅ | Complete |
-| 1 | Project foundation, tooling, biome | 🔄 | In Progress |
-| 2 | D1 Schema, local dev DB, migrations | ⏳ | Pending |
+| 1 | Project foundation, tooling, biome | ✅ | Complete |
+| 2 | D1 Schema, local dev DB, migrations | 🔄 | In Progress |
 | 3 | Auth middleware (GitHub OAuth) | ⏳ | Pending |
 
 ## Keputusan Arsitektur
@@ -20,12 +20,15 @@
 - 2026-08-19 — D1 chosen over PlanetScale (free quota, edge-native, row-level not needed — workspace_id filter sufficient)
 - 2026-08-19 — Secrets (OAuth tokens, API keys) → KV, encrypted. Never stored in D1.
 - 2026-08-19 — GitHub OAuth only (no password auth, no multi-user roles for v1)
+- 2026-08-19 — Node.js v22.23.1 global, nvm/nvs not used
+- 2026-08-19 — Biome v1.9.4 for lint/format, strict TS config with noUncheckedIndexedAccess
 
 ## Masalah yang Belum Terselesaikan
 - GitHub OAuth app credentials belum dibuat
 - 9Router proxy configuration (port, API key) belum diverifikasi
 - Cloudflare Pages Functions local dev (`npx wrangler pages dev`) belum diuji
 - No mobile-first design in v1 scope
+- D1 local dev setup pending (Phase 2)
 
 ## Struktur Direktori
 ```
@@ -58,17 +61,47 @@ content_generator/
 │       └── queue_DO.ts
 ├── src/
 │   ├── entry.tsx
+│   ├── env.d.ts
 │   ├── layouts/
+│   │   └── Layout.astro
 │   ├── pages/
+│   │   └── index.astro
 │   ├── components/
+│   │   └── Welcome.astro
+│   ├── assets/
+│   │   ├── astro.svg
+│   │   └── background.svg
+│   ├── styles/
+│   │   └── global.css
 │   └── lib/
 │       ├── client/
+│       │   ├── api.ts
+│       │   └── stores/
+│       │       ├── workspace.ts
+│       │       ├── articles.ts
+│       │       └── calendar.ts
 │       └── server/
 │           ├── db.ts
 │           ├── auth.ts
 │           ├── cms/
+│           │   ├── wordpress.ts
+│           │   ├── blogger.ts
+│           │   └── astro.ts
 │           ├── ai/
-│           └── queue.ts
+│           │   ├── router.ts
+│           │   ├── generate.ts
+│           │   ├── style-dna.ts
+│           │   └── image.ts
+│           ├── queue.ts
+│           ├── scheduler.ts
+│           ├── quality.ts
+│           └── compliance.ts
+├── public/
+│   ├── favicon.svg
+│   └── favicon.ico
+├── .git/
+├── .astro/
+├── node_modules/
 └── .dev.vars
 ```
 
