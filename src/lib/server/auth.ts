@@ -1,7 +1,6 @@
 // src/lib/server/auth.ts
 // Session management utilities for GitHub OAuth
 
-// Session payload stored in KV
 export interface SessionData {
   workspace_id: string;
   user_id: string;
@@ -12,13 +11,44 @@ export interface SessionData {
   expires_at: string;
 }
 
-// Cookie options
+export interface ValidatedSession {
+  user: SessionData;
+  workspaceId: string;
+}
+
 const COOKIE_NAME = 'cg_session';
-const SESSION_TTL_SECONDS = 24 * 60 * 60; // 24 hours
+const SESSION_TTL_SECONDS = 24 * 60 * 60;
 const HMAC_ALGO = 'SHA-256';
 
 /**
- * Sign a session token with HMAC-SHA256
+ * Get or create a workspace for a GitHub user
+ */
+export async function getOrCreateWorkspace(
+  env: { DB: D1Database; KV: KVNamespace },
+  githubId: string,
+  githubLogin: string,
+): Promise<string> {
+  const workspaceId = `ws_${githubId}`;
+
+  const existing = await env.DB.prepare('SELECT id FROM workspaces WHERE id = ?')
+    .bind(workspaceId)
+    .first<{ id: string }>();
+
+  if (existing) {
+    return existing.id;
+  }
+
+  await env.DB.prepare(
+    'INSERT INTO workspaces (id, name, description, default_lang, timezone) VALUES (?, ?, ?, ?, ?)',
+  )
+    .bind(workspaceId, `${githubLogin}'s workspace`, null, 'id', 'Asia/Jakarta')
+    .run();
+
+  return workspaceId;
+}
+
+/**
+ * Sign session data with HMAC
  */
 export async function signSession(data: SessionData, secret: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -27,18 +57,20 @@ export async function signSession(data: SessionData, secret: string): Promise<st
     encoder.encode(secret),
     { name: 'HMAC', hash: HMAC_ALGO },
     false,
-    ['sign', 'verify'],
+    ['sign'],
   );
 
   const payload = JSON.stringify(data);
   const signature = await crypto.subtle.sign(HMAC_ALGO, key, encoder.encode(payload));
-  const sigBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  const sigArray = Array.from(new Uint8Array(signature));
+  const sigBase64 = btoa(String.fromCharCode(...sigArray));
 
-  return `${btoa(payload)}.${sigBase64}`;
+  const payloadB64 = btoa(payload);
+  return `${payloadB64}.${sigBase64}`;
 }
 
 /**
- * Verify and decode a session token
+ * Verify session token and return session data
  */
 export async function verifySession(token: string, secret: string): Promise<SessionData | null> {
   try {
@@ -48,22 +80,30 @@ export async function verifySession(token: string, secret: string): Promise<Sess
     const sigBase64 = parts[1];
     if (!payloadB64 || !sigBase64) return null;
 
-    const payload = JSON.parse(atob(payloadB64)) as SessionData;
-    const expectedSig = await signSession(payload, secret);
-    const expectedParts = expectedSig.split('.');
-    if (expectedParts.length !== 2) return null;
-    const expectedSigB64 = expectedParts[1];
-    if (!expectedSigB64) return null;
+    const payloadStr = atob(payloadB64);
+    const payload = JSON.parse(payloadStr) as SessionData;
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: HMAC_ALGO },
+      false,
+      ['sign'],
+    );
+
+    const expectedSig = await crypto.subtle.sign(HMAC_ALGO, key, encoder.encode(payloadStr));
+    const expectedArray = Array.from(new Uint8Array(expectedSig));
+    const expectedBase64 = btoa(String.fromCharCode(...expectedArray));
 
     // Constant-time comparison
-    if (sigBase64.length !== expectedSigB64.length) return null;
+    if (sigBase64.length !== expectedBase64.length) return null;
     let diff = 0;
     for (let i = 0; i < sigBase64.length; i++) {
-      diff |= sigBase64.charCodeAt(i) ^ expectedSigB64.charCodeAt(i);
+      diff |= sigBase64.charCodeAt(i) ^ expectedBase64.charCodeAt(i);
     }
     if (diff !== 0) return null;
 
-    // Check expiry
     if (new Date(payload.expires_at) < new Date()) return null;
 
     return payload;
@@ -73,7 +113,7 @@ export async function verifySession(token: string, secret: string): Promise<Sess
 }
 
 /**
- * Create session cookie string
+ * Create Set-Cookie header for session
  */
 export function createSessionCookie(token: string, isSecure: boolean): string {
   const parts = [
@@ -113,32 +153,6 @@ export function getSessionFromCookie(cookieHeader: string | null): string | null
 }
 
 /**
- * Get session from KV (with caching hint)
- */
-export async function getSessionFromKV(
-  kv: KVNamespace,
-  token: string,
-  secret: string,
-): Promise<SessionData | null> {
-  // First verify HMAC signature
-  const payload = await verifySession(token, secret);
-  if (!payload) return null;
-
-  // Then check KV for revocation/expiry
-  const stored = (await kv.get(`session:${token}`)) as SessionData | null;
-  if (!stored) return null;
-
-  // Verify stored data matches payload
-  if (stored.workspace_id !== payload.workspace_id) return null;
-  if (new Date(stored.expires_at) < new Date()) {
-    await kv.delete(`session:${token}`);
-    return null;
-  }
-
-  return stored;
-}
-
-/**
  * Store session in KV
  */
 export async function storeSessionInKV(
@@ -157,40 +171,13 @@ export async function deleteSessionFromKV(kv: KVNamespace, token: string): Promi
 }
 
 /**
- * Get or create workspace for user (on first login)
- */
-export async function getOrCreateWorkspace(
-  env: { DB: D1Database; KV: KVNamespace },
-  userId: string,
-  userName: string,
-): Promise<string> {
-  // Check if user already has workspace
-  const existing = await env.DB.prepare('SELECT id FROM workspaces WHERE id = ?')
-    .bind(`ws_${userId}`)
-    .first();
-
-  if (existing) return `ws_${userId}`;
-
-  // Create new workspace
-  const workspaceId = `ws_${userId}`;
-  await env.DB.prepare(`
-    INSERT INTO workspaces (id, name, description, default_lang, timezone)
-    VALUES (?, ?, ?, 'id', 'Asia/Jakarta')
-  `)
-    .bind(workspaceId, `${userName}'s Workspace`, 'Auto-created on first login')
-    .run();
-
-  return workspaceId;
-}
-
-/**
- * Validate session and attach to request
+ * Validate session from request cookie
  */
 export async function validateSession(
   request: Request,
-  env: { DB: D1Database; KV: KVNamespace },
+  _env: { DB: D1Database; KV: KVNamespace },
   secret: string,
-): Promise<{ user: SessionData; workspaceId: string } | Response> {
+): Promise<ValidatedSession | Response> {
   const cookieHeader = request.headers.get('Cookie');
   const token = getSessionFromCookie(cookieHeader);
 
@@ -207,7 +194,7 @@ export async function validateSession(
     );
   }
 
-  const session = await getSessionFromKV(env.KV, token, secret);
+  const session = await verifySession(token, secret);
   if (!session) {
     return new Response(
       JSON.stringify({

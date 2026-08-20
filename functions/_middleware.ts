@@ -11,10 +11,6 @@ export async function onRequest(context: {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
-  // Skip auth for:
-  // - Static assets (handled by Astro)
-  // - /api/auth/* routes (public)
-  // - Health checks
   if (
     url.pathname.startsWith('/api/auth/') ||
     url.pathname === '/api/health' ||
@@ -24,7 +20,6 @@ export async function onRequest(context: {
     return next();
   }
 
-  // Protect all /api/* routes
   if (url.pathname.startsWith('/api/')) {
     const sessionSecret = env.GITHUB_CLIENT_SECRET;
     if (!sessionSecret) {
@@ -36,7 +31,6 @@ export async function onRequest(context: {
 
     const result = await validateSession(request, env, sessionSecret);
 
-    // If validateSession returns Response, it's an error (401)
     if (result instanceof Response) {
       const errorResponse = new Response(result.body, {
         status: result.status,
@@ -49,10 +43,9 @@ export async function onRequest(context: {
       return errorResponse;
     }
 
-    // Attach user and workspace to request headers for downstream handlers
     const newHeaders = new Headers(request.headers);
     newHeaders.set('X-User-Id', result.user.user_id);
-    newHeaders.set('X-Workspace-Id', result.workspaceId);
+    newHeaders.set('X-Workspace-Id', result.user.workspace_id);
     newHeaders.set('X-User-Name', result.user.user_name);
 
     const modifiedRequest = new Request(request, {

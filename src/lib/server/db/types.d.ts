@@ -1,15 +1,6 @@
 // src/lib/server/db/types.d.ts
-// Minimal type declarations for Cloudflare Workers runtime types
-// These are available globally in Workers/D1 runtime context
-// but not available during local TypeScript checking without @cloudflare/workers-types
-
-// D1 Database types
-declare type D1Database = {
-  prepare(query: string): D1PreparedStatement;
-  dump(): Promise<ArrayBuffer>;
-  batch(statements: unknown[]): Promise<unknown[]>;
-  exec(query: string): Promise<unknown>;
-};
+// Cloudflare Workers runtime types (D1, KV, R2, DO)
+// Ambient declarations for local TypeScript checking
 
 declare type D1PreparedStatement = {
   bind(...values: unknown[]): D1PreparedStatement;
@@ -30,80 +21,35 @@ declare type D1PreparedStatement = {
   raw<T = unknown>(): Promise<T[]>;
 };
 
-// KV Namespace
+declare type D1Database = {
+  prepare(query: string): D1PreparedStatement;
+  dump(): Promise<ArrayBuffer>;
+  batch(statements: unknown[]): Promise<unknown[]>;
+  exec(query: string): Promise<unknown>;
+};
+
 declare type KVNamespace = {
   get(key: string): Promise<string | null>;
-  getWithMetadata<T = unknown>(
-    key: string,
-  ): Promise<{ value: string | null; metadata: T | null; cacheStatus: string }>;
-  put(
-    key: string,
-    value: string | ReadableStream,
-    options?: { expiration?: number; expirationTtl?: number; metadata?: unknown; cf?: unknown },
-  ): Promise<void>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
   delete(key: string): Promise<boolean>;
-  list(options?: { prefix?: string; limit?: number; reverse?: boolean; cursor?: string }): Promise<{
-    keys: { name: string; expiration?: number; metadata?: unknown }[];
-    list_complete: boolean;
-    cacheStatus: string;
-    cursor: string;
-  }>;
 };
 
-// R2 Bucket
 declare type R2Bucket = {
-  get(key: string, options?: unknown): Promise<R2ObjectBody | null>;
-  put(
-    key: string,
-    value: string | ReadableStream | ArrayBuffer,
-    options?: unknown,
-  ): Promise<R2Object>;
-  delete(key: string): Promise<R2Object | null>;
-  list(options?: unknown): Promise<{ objects: R2Object[]; truncated: boolean; cursor: string }>;
-  head(key: string): Promise<R2Object | null>;
+  get(key: string): Promise<unknown | null>;
+  put(key: string, value: string): Promise<unknown>;
+  delete(key: string): Promise<unknown | null>;
+  list(options?: unknown): Promise<unknown>;
+  head(key: string): Promise<unknown | null>;
 };
 
-declare type R2Object = {
-  key: string;
-  etag: string;
-  version: string;
-  size: number;
-  etagMismatch: boolean;
-  httpEtag: string;
-  httpLastModified: string;
-  httpContentLength: number;
-  httpContentRange: string;
-  uploaded: string;
-  httpMetadata: unknown;
-  customMetadata: Record<string, string>;
-  storageClass: string;
-  checksums: Record<string, string>;
-};
-
-declare type R2ObjectBody = R2Object & {
-  body: ReadableStream;
-};
-
-// Durable Object
 declare type DurableObjectNamespace = {
-  idFromName(name: string): DurableObjectId;
-  idFromAny(indexedId: string, id: string): DurableObjectId;
-  newUniqueId(requestId?: string): DurableObjectId;
-  waitingRoom: boolean;
-  get(id: DurableObjectId): DurableObjectStub;
+  idFromName(name: string): unknown;
+  newUniqueId(): unknown;
+  get(id: unknown): unknown;
 };
 
-declare type DurableObjectId = {
-  toString(): string;
-  name: string;
-};
-
-declare type DurableObjectStub = {
-  fetch(request: Request): Promise<Response>;
-};
-
-// Env interface
-declare interface Env {
+// Env interface (global ambient)
+interface Env {
   DB: D1Database;
   KV: KVNamespace;
   R2: R2Bucket;
@@ -113,3 +59,17 @@ declare interface Env {
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
 }
+
+// ExecutionContext (global ambient)
+interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  next(): Promise<Response>;
+}
+
+// PagesFunction type (global ambient)
+type PagesFunction<T = unknown> = (context: {
+  request: Request;
+  env: T;
+  params?: Record<string, string>;
+  next: (request?: Request) => Promise<Response>;
+}) => Promise<Response>;

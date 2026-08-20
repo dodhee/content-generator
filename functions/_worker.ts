@@ -4,75 +4,69 @@
 import { onRequest } from './_middleware';
 
 import * as authCallback from './api/auth/callback';
-// Import all API handlers
 import * as authLogin from './api/auth/login';
 import * as authLogout from './api/auth/logout';
+import * as sitesId from './api/sites/[id]';
+import * as sitesIndex from './api/sites/index';
+import * as workspacesId from './api/workspaces/[id]';
+import * as workspacesIndex from './api/workspaces/index';
 
-// Router function
-async function route(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
+  const method = request.method;
 
-  // API routes
   if (path.startsWith('/api/')) {
-    // Auth routes
-    if (path === '/api/auth/login' && request.method === 'GET') {
+    if (path === '/api/auth/login' && method === 'GET')
       return authLogin.onRequestGet({ request, env });
-    }
-    if (path === '/api/auth/callback' && request.method === 'GET') {
+    if (path === '/api/auth/callback' && method === 'GET')
       return authCallback.onRequestGet({ request, env });
-    }
-    if (path === '/api/auth/logout' && request.method === 'POST') {
+    if (path === '/api/auth/callback' && method === 'POST')
+      return authCallback.onRequestPost({ request, env });
+    if (path === '/api/auth/logout' && (method === 'POST' || method === 'GET'))
       return authLogout.onRequestPost({ request, env });
-    }
 
-    // Health check (no auth required)
-    if (path === '/api/health' && request.method === 'GET') {
+    if (path === '/api/health' && method === 'GET') {
       return new Response(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Protected routes will be handled by middleware + specific handlers
+    if (path === '/api/workspaces' && method === 'GET')
+      return workspacesIndex.onRequest({ request, env });
+    if (path === '/api/workspaces' && method === 'POST')
+      return workspacesIndex.onRequest({ request, env });
+    const wsMatch = path.match(/^\/api\/workspaces\/([^/]+)$/);
+    if (wsMatch) {
+      return workspacesId.onRequest({ request, env, params: { id: wsMatch[1] ?? '' } });
+    }
+
+    if (path === '/api/sites' && method === 'GET') return sitesIndex.onRequest({ request, env });
+    if (path === '/api/sites' && method === 'POST') return sitesIndex.onRequest({ request, env });
+    const siteMatch = path.match(/^\/api\/sites\/([^/]+)$/);
+    if (siteMatch) {
+      return sitesId.onRequest({ request, env, params: { id: siteMatch[1] ?? '' } });
+    }
+
     return new Response(JSON.stringify({ error: 'API route not found' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // Non-API routes: serve static assets (handled by Astro automatically)
   return new Response('Not found', { status: 404 });
 }
 
-// Export the fetch handler
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // Run middleware first
-    const middlewareResult = await onRequest({
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const result = await onRequest({
       request,
       env,
       next: async (modifiedRequest?: Request) => {
-        return route(modifiedRequest || request, env, ctx);
+        return route(modifiedRequest ?? request, env);
       },
     });
 
-    return middlewareResult;
+    return result;
   },
 };
-
-// Type definitions for Env
-interface Env {
-  DB: D1Database;
-  KV: KVNamespace;
-  R2: R2Bucket;
-  QUEUE: DurableObjectNamespace;
-  NINE_ROUTER_API_KEY?: string;
-  OPENROUTER_API_KEY?: string;
-  GITHUB_CLIENT_ID?: string;
-  GITHUB_CLIENT_SECRET?: string;
-}
-
-interface ExecutionContext {
-  waitUntil(promise: Promise<unknown>): void;
-  next(): Promise<Response>;
-}

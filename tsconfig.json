@@ -6,16 +6,15 @@
     "isolatedModules": true,
     "moduleResolution": "bundler",
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "types": ["astro/client"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "paths": {
-      "@/*": ["./src/*"],
-      "~/*": ["./src/*"]
-    },
-    "types": ["astro/client", "vite/client"]
+    "allowImportingTsExtensions": false
   },
-  "include": ["src/**/*", "astro.config.mjs", "db/**/*", "functions/**/*"],
-  "exclude": ["node_modules", "dist", ".astro"]
+  "include": ["src", "functions", "tests", "db"]
 }
