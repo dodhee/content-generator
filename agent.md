@@ -4,7 +4,7 @@
 - **Nama Proyek**: AI Auto Content Generator
 - **Tech Stack**: Astro + React/Preact islands, Cloudflare Pages + Functions, D1, KV, R2, Durable Objects, 9Router/OpenRouter
 - **Tanggal Mulai**: 2026-08-19
-- **Update Terakhir**: 2026-08-20
+- **Update Terakhir**: 2026-08-23
 
 ## Status Fase
 | Fase | Deskripsi | Status | Catatan |
@@ -14,7 +14,7 @@
 | 2    | D1 Schema, local dev DB, migrations | ✅ | Complete — Drizzle schema.js (8 tables, checks), migration 0001_initial.sql |
 | 3    | Auth middleware (GitHub OAuth) | ✅ | Complete — auth.ts, _middleware.ts, callback.ts, test 401 |
 | 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
-| 5    | Article CRUD + status pipeline | 🔄 | In Progress — belum dibuat |
+| 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 6    | AI Generation Pipeline | ⏳ | Pending |
 | 7    | Content Calendar (MVP) | ⏳ | Pending |
 | 8    | WordPress Publisher | ⏳ | Pending |
