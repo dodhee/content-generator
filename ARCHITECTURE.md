@@ -21,7 +21,7 @@
 | **Storage** | Cloudflare R2 | Media assets, exports, backups (unlimited, cheap) |
 | **Vector** | Cloudflare Vectorize (optional, Phase 2) | Style embeddings, semantic search |
 | **Queue** | Durable Objects | Exactly-once generation, per-site ordering, observable state |
-| **AI Router** | 9Router (local) → OpenRouter fallback | Free tier, BYOK, local model support |
+|| **AI Router** | 9Router (local) → OpenRouter fallback | Free tier, BYOK, local model support (base: https://9router.codevx.web.id) |
 | **Image Gen** | Pollinations.ai / FLUX (free) | No cost untuk AI images |
 
 ---
