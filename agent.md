@@ -115,6 +115,7 @@ content_generator/
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `NINE_ROUTER_API_KEY` (or leave empty for local no-auth)
+- `NINE_ROUTER_BASE_URL` (default: https://9router.codevx.web.id)
 - `DATABASE_URL` (auto-managed by Wrangler)
 - `KV_URL` (auto-managed by Wrangler)
 
