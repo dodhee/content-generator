@@ -15,7 +15,7 @@
 | 3    | Auth middleware (GitHub OAuth) | ✅ | Complete — auth.ts, _middleware.ts, callback.ts, test 401 |
 | 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
 | 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
-| 6    | AI Generation Pipeline | ⏳ | Pending |
+| 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
 | 7    | Content Calendar (MVP) | ⏳ | Pending |
 | 8    | WordPress Publisher | ⏳ | Pending |
 | 9    | Publish Queue Dashboard | ⏳ | Pending |
