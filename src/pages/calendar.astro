@@ -1,0 +1,53 @@
+// src/pages/calendar.astro
+// Calendar page with CalendarGrid island
+
+import Layout from '../layouts/Layout.astro';
+import { CalendarGrid } from '../components/CalendarGrid';
+import { validateSession } from '../lib/server/auth';
+import { listCalendarSlots } from '../lib/server/calendar';
+import { listArticles } from '../lib/server/articles';
+import type { Env } from '../lib/server/db';
+
+export async function getStaticPaths() {
+  return [];
+}
+
+export async function getServerContext() {
+  return {
+    env: {} as Env,
+  };
+}
+
+const { env } = Astro.locals as { env: Env };
+
+const sessionResult = await validateSession(Astro.request, env, env.GITHUB_CLIENT_SECRET ?? '');
+if (sessionResult instanceof Response) {
+  return Astro.redirect('/login');
+}
+
+const session = sessionResult;
+const workspaceId = session.user.workspace_id;
+
+const [year, month] = new Date().toISOString().split('-').slice(0, 2);
+const initialMonth = `${year}-${month}`;
+
+const slots = await listCalendarSlots(env.DB, workspaceId, { month: initialMonth });
+const articles = await listArticles(env.DB, workspaceId);
+
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Content Calendar</h1>
+    <CalendarGrid
+      client:load
+      workspaceId={workspaceId}
+      initialMonth={initialMonth}
+      slots={slots}
+      articles={articles}
+      onSlotClick={() => {}}
+      onArticleDrop={async () => {}}
+      onSlotCreate={() => {}}
+    />
+  </div>
+</Layout>

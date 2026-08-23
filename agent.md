@@ -16,7 +16,7 @@
 | 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
 | 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
-| 7    | Content Calendar (MVP) | ⏳ | Pending |
+| 7    | Content Calendar (MVP) | ✅ | Complete — month view, week grouping, slot CRUD, drag-drop assignment |
 | 8    | WordPress Publisher | ⏳ | Pending |
 | 9    | Publish Queue Dashboard | ⏳ | Pending |
 
