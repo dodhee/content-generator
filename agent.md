@@ -17,9 +17,9 @@
 | 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
 | 7    | Content Calendar (MVP) | ✅ Verified | Complete — month view, week grouping, slot CRUD, drag-drop assignment; biome 0 errors, tsc clean |
+| 8    | Publish Queue API | ✅ Verified | functions/api/publish/index.ts + src/types/publish.ts: POST /api/publish (enqueue to DO queue) + GET /api/publish/queue (list); biome+tsc clean |
 | 8.1  | WordPress Publisher (publishArticle fn) | ✅ Verified | src/lib/server/cms/wordpress.ts: added publishArticle() -> WP REST API v2 POST /wp/v2/posts; biome+tsc clean |
-| 8    | Publish Queue Dashboard | ⏳ | Pending — Fase 8.1 (publishArticle) ✅ Verified, next: publish queue API
-| 9    | Publish Queue Dashboard | ⏳ | Pending |
+| 9    | Publish Queue Dashboard (UI) | ⏳ | Pending — Fase 8 (publish API) ✅ Verified, next: frontend dashboard |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
