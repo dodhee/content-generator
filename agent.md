@@ -20,6 +20,7 @@
 | 8    | Publish Queue API | ✅ Verified | functions/api/publish/index.ts + src/types/publish.ts: POST /api/publish (enqueue to DO queue) + GET /api/publish/queue (list); biome+tsc clean |
 | 8.1  | WordPress Publisher (publishArticle fn) | ✅ Verified | src/lib/server/cms/wordpress.ts: added publishArticle() -> WP REST API v2 POST /wp/v2/posts; biome+tsc clean |
 | 9    | Publish Queue Dashboard (UI) | ✅ Verified | publish-queue.astro + PublishQueueTable.tsx + DriftDetector.tsx; biome+tsc clean; biome-ignore for astro frontmatter false positive |
+| 9.2  | Publish Job Status API | ✅ Verified | functions/api/publish/[id].ts: GET /:id (DO fallback DB + workspace check) + PATCH /:id/retry (failed-only, reset+re-enqueue); DO payload key fixed job_id/article_id/site_id |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -38,6 +39,7 @@
 - Cloudflare Pages Functions local dev (`npx wrangler pages dev`) belum diuji
 - No mobile-first design in v1 scope
 - D1 local dev setup pending (Phase 2)
+- DriftDetector.tsx masih mock data (belum panggil API drift detection asli)
 
 ## Struktur Direktori
 ```
