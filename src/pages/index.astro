@@ -1,11 +1,15 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-	<Welcome />
+  <main class="mx-auto flex min-h-screen max-w-4xl flex-col justify-center px-6 py-16">
+    <p class="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">Fase 1</p>
+    <h1 class="mt-4 text-4xl font-bold tracking-tight text-white sm:text-6xl">
+      AI Auto Content Generator
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+      Project foundation ready for internal content planning, generation, review, and publishing workflows.
+    </p>
+  </main>
 </Layout>

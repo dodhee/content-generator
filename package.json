@@ -12,7 +12,9 @@
     "astro": "astro",
     "lint": "biome check --write .",
     "lint:check": "biome check .",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "db:verify": "tsx db/verify.ts",
+    "dev:functions": "wrangler pages dev . --port 8787 --compatibility-date=2024-01-01"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.3",
@@ -20,6 +22,7 @@
     "astro": "^7.2.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "drizzle-zod": "^0.8.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwindcss": "^4.0.0",
@@ -27,10 +30,16 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@cloudflare/workers-types": "^4.20240601.0",
     "@neondatabase/serverless": "^0.10.4",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "better-sqlite3": "^11.5.0",
+    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.35.3",
+    "tsx": "^4.19.4",
     "typescript": "^7.0.2",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.4",
+    "wrangler": "^3.0.0"
   }
 }

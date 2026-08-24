@@ -1,7 +1,7 @@
 // src/components/CalendarGrid.tsx
 // Month/Week calendar grid with drag-drop
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { ArticleRow } from '../lib/server/articles';
 import type { CalendarSlotRow } from '../types/calendar';
 
@@ -70,7 +70,7 @@ function getSlotColor(type: string): string {
 }
 
 export function CalendarGrid({
-  workspaceId,
+  workspaceId: _workspaceId,
   initialMonth,
   slots: allSlots,
   articles,
@@ -79,10 +79,8 @@ export function CalendarGrid({
   onSlotCreate,
 }: CalendarGridProps) {
   const [month, setMonth] = React.useState(initialMonth);
-  const [_view, _setView] = React.useState<'month' | 'week'>('month');
-  const [selectedSlot, setSelectedSlot] = React.useState<CalendarSlotRow | null>(null);
-  const [dragArticle, setDragArticle] = React.useState<ArticleRow | null>(null);
-
+  const [dragArticle, setDragArticle] = useState<ArticleRow | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<CalendarSlotRow | null>(null);
   const [year, monthNum] = month.split('-').map(Number) as [number, number];
   const days = getDaysInMonth(year, monthNum - 1);
 
@@ -115,7 +113,10 @@ export function CalendarGrid({
     const key = day.date.toISOString().split('T')[0] as string;
     const daySlots = slotsByDay[key] || [];
     if (daySlots.length > 0) {
-      await onArticleDrop(dragArticle.id, daySlots[0]!.id);
+      const targetSlotId = daySlots[0]?.id;
+      if (targetSlotId) {
+        await onArticleDrop(dragArticle.id, targetSlotId);
+      }
     } else {
       onSlotCreate(day.date);
     }
@@ -156,13 +157,33 @@ export function CalendarGrid({
   return (
     <div className="calendar-grid p-4 bg-white rounded-lg shadow">
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded">
+        <button
+          onClick={prevMonth}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              prevMonth();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 rounded"
+          type="button"
+        >
           ←
         </button>
         <h2 className="text-lg font-semibold">
           {monthNames[monthNum - 1]} {year}
         </h2>
-        <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded">
+        <button
+          onClick={nextMonth}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              nextMonth();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 rounded"
+          type="button"
+        >
           →
         </button>
       </div>
@@ -176,9 +197,9 @@ export function CalendarGrid({
       </div>
 
       <div className="grid grid-cols-7 gap-0.5">
-        {daysWithSlots.map((day, idx) => (
+        {daysWithSlots.map((day) => (
           <div
-            key={idx}
+            key={day.date.toISOString()}
             className={`relative min-h-[100px] p-1 border ${
               day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'
             } ${day.isToday ? 'ring-2 ring-blue-500' : ''}
@@ -189,10 +210,11 @@ export function CalendarGrid({
             <div className="text-xs font-medium mb-1">{day.date.getDate()}</div>
             <div className="space-y-1 max-h-[80px] overflow-auto">
               {day.slots.slice(0, 3).map((slot: CalendarSlotRow) => (
-                <div
+                <button
                   key={slot.id}
-                  className={`text-xs px-1 py-0.5 rounded truncate cursor-pointer border ${getSlotColor(slot.slot_type)}`}
+                  className={`text-xs px-1 py-0.5 rounded truncate cursor-pointer border ${getSlotColor(slot.slot_type)} text-left w-full`}
                   onClick={() => handleSlotClick(slot)}
+                  type="button"
                 >
                   {slot.slot_type === 'generation'
                     ? '📝'
@@ -200,16 +222,20 @@ export function CalendarGrid({
                       ? '📤'
                       : '📌'}
                   {slot.article_id && ' Article'}
-                </div>
+                </button>
               ))}
               {day.slots.length > 3 && (
                 <div className="text-xs text-gray-500 truncate">+{day.slots.length - 3} more</div>
               )}
             </div>
             {!day.slots.length && day.isCurrentMonth && (
-              <div className="text-xs text-gray-300 h-4" onClick={() => onSlotCreate(day.date)}>
+              <button
+                className="text-xs text-gray-300 h-4 cursor-pointer w-full text-left"
+                onClick={() => onSlotCreate(day.date)}
+                type="button"
+              >
                 +
-              </div>
+              </button>
             )}
           </div>
         ))}
@@ -229,7 +255,13 @@ export function CalendarGrid({
                 onDragStart={() => handleDragStart(article)}
                 className="text-xs px-2 py-1 bg-white border rounded cursor-move hover:shadow"
               >
-                {article.title || 'Untitled'} ({article.status})
+                <button
+                  type="button"
+                  onClick={() => handleDragStart(article)}
+                  className="w-full text-left"
+                >
+                  {article.title || 'Untitled'} ({article.status})
+                </button>
               </div>
             ))}
         </div>
@@ -240,10 +272,14 @@ export function CalendarGrid({
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={() => setSelectedSlot(null)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setSelectedSlot(null);
+          }}
         >
           <div
             className="bg-white p-4 rounded-lg w-96 max-h-[80vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             <h3 className="font-semibold mb-2">Slot Details</h3>
             <p className="text-sm text-gray-600">Type: {selectedSlot.slot_type}</p>
@@ -252,6 +288,7 @@ export function CalendarGrid({
             </p>
             {selectedSlot.is_recurring && <p className="text-sm text-gray-600">Recurring: Yes</p>}
             <button
+              type="button"
               className="mt-3 px-3 py-1 bg-blue-600 text-white rounded text-sm"
               onClick={() => setSelectedSlot(null)}
             >

@@ -4,7 +4,7 @@
 - **Nama Proyek**: AI Auto Content Generator
 - **Tech Stack**: Astro + React/Preact islands, Cloudflare Pages + Functions, D1, KV, R2, Durable Objects, 9Router/OpenRouter
 - **Tanggal Mulai**: 2026-08-19
-- **Update Terakhir**: 2026-08-23
+- **Update Terakhir**: 2026-08-24
 
 ## Status Fase
 | Fase | Deskripsi | Status | Catatan |
@@ -16,7 +16,7 @@
 | 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
 | 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
-| 7    | Content Calendar (MVP) | ✅ | Complete — month view, week grouping, slot CRUD, drag-drop assignment |
+| 7    | Content Calendar (MVP) | ✅ Verified | Complete — month view, week grouping, slot CRUD, drag-drop assignment; biome 0 errors, tsc clean |
 | 8    | WordPress Publisher | ⏳ | Pending |
 | 9    | Publish Queue Dashboard | ⏳ | Pending |
 
@@ -28,6 +28,7 @@
 - 2026-08-19 — GitHub OAuth only (no password auth, no multi-user roles for v1)
 - 2026-08-19 — Node.js v22.23.1 global, nvm/nvs not used
 - 2026-08-19 — Biome v1.9.4 for lint/format, strict TS config with noUncheckedIndexedAccess
+- 2026-08-24 — CalendarGrid.tsx biome errors fixed (a11y + non-null assertion + index key + button type); state variables restored after Claude Code regression
 
 ## Masalah yang Belum Terselesaikan
 - GitHub OAuth app credentials belum dibuat
