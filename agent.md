@@ -19,7 +19,7 @@
 | 7    | Content Calendar (MVP) | ✅ Verified | Complete — month view, week grouping, slot CRUD, drag-drop assignment; biome 0 errors, tsc clean |
 | 8    | Publish Queue API | ✅ Verified | functions/api/publish/index.ts + src/types/publish.ts: POST /api/publish (enqueue to DO queue) + GET /api/publish/queue (list); biome+tsc clean |
 | 8.1  | WordPress Publisher (publishArticle fn) | ✅ Verified | src/lib/server/cms/wordpress.ts: added publishArticle() -> WP REST API v2 POST /wp/v2/posts; biome+tsc clean |
-| 9    | Publish Queue Dashboard (UI) | ⏳ | Pending — Fase 8 (publish API) ✅ Verified, next: frontend dashboard |
+| 9    | Publish Queue Dashboard (UI) | ✅ Verified | publish-queue.astro + PublishQueueTable.tsx + DriftDetector.tsx; biome+tsc clean; biome-ignore for astro frontmatter false positive |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -30,6 +30,7 @@
 - 2026-08-19 — Node.js v22.23.1 global, nvm/nvs not used
 - 2026-08-19 — Biome v1.9.4 for lint/format, strict TS config with noUncheckedIndexedAccess
 - 2026-08-24 — CalendarGrid.tsx biome errors fixed (a11y + non-null assertion + index key + button type); state variables restored after Claude Code regression
+- 2026-08-24 — PublishQueueTable + DriftDetector components + publish-queue.astro page; biome-ignore added for astro frontmatter false-positive on workspaceId variable
 
 ## Masalah yang Belum Terselesaikan
 - GitHub OAuth app credentials belum dibuat
