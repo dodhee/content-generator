@@ -13,14 +13,17 @@
 | 1    | Project foundation, tooling, biome | ✅ | Complete |
 | 2    | D1 Schema, local dev DB, migrations | ✅ | Complete — Drizzle schema.js (8 tables, checks), migration 0001_initial.sql |
 | 3    | Auth middleware (GitHub OAuth) | ✅ | Complete — auth.ts, _middleware.ts, callback.ts, test 401 |
-| 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
+| 4    | Workspace & Sites API + Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
 | 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
-| 7    | Content Calendar (MVP) | ✅ Verified | Complete — month view, week grouping, slot CRUD, drag-drop assignment; biome 0 errors, tsc clean |
-| 8    | Publish Queue API | ✅ Verified | functions/api/publish/index.ts + src/types/publish.ts: POST /api/publish (enqueue to DO queue) + GET /api/publish/queue (list); biome+tsc clean |
-| 8.1  | WordPress Publisher (publishArticle fn) | ✅ Verified | src/lib/server/cms/wordpress.ts: added publishArticle() -> WP REST API v2 POST /wp/v2/posts; biome+tsc clean |
-| 9    | Publish Queue Dashboard (UI) | ✅ Verified | publish-queue.astro + PublishQueueTable.tsx + DriftDetector.tsx; biome+tsc clean; biome-ignore for astro frontmatter false positive |
-| 9.2  | Publish Job Status API | ✅ Verified | functions/api/publish/[id].ts: GET /:id (DO fallback DB + workspace check) + PATCH /:id/retry (failed-only, reset+re-enqueue); DO payload key fixed job_id/article_id/site_id |
+| 7    | Content Calendar (MVP) | ✅ Verified | month view, week grouping, slot CRUD, drag-drop; biome+tsc clean |
+| 9.1  | wordpress.ts publishArticle() | ✅ Verified | WP REST API v2 POST /wp/v2/posts; biome+tsc clean (TASK_LIST Fase 9.1) |
+| 9.2  | functions/api/publish/index.ts | ✅ Verified | POST /api/publish enqueue + GET /api/publish/queue list (TASK_LIST Fase 9.2; 10.1 tercakup di sini) |
+| 9.3  | functions/api/publish/[id].ts | ✅ Verified | GET status (DO fallback DB) + PATCH /retry; DO payload key fixed (TASK_LIST Fase 9.3; 10.2 retry tercakup di sini) |
+| 10.3 | src/pages/publish-queue.astro | ✅ Verified | dashboard page; biome-ignore astro frontmatter FP |
+| 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
+| 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
+| 9.4  | E2E test publish ke WP real | ⏳ | Next — butuh wrangler pages dev + WP site credentials |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
