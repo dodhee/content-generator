@@ -30,3 +30,4 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 .wrangler/
+worker/dist-worker/

@@ -1,0 +1,13 @@
+name = "content-generator-queue"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Queue"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "content-generator"
+database_id = "103ffeac-1fd7-45cf-82f0-2b8f44322103"

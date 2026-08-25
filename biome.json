@@ -29,6 +29,6 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "dist", ".astro", ".wrangler", "*.lock"]
+    "ignore": ["node_modules", "dist", ".astro", ".wrangler", "worker/dist-worker", "*.lock"]
   }
 }

@@ -24,7 +24,8 @@
 | 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
 | 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
 | 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
-| 9.5  | E2E test publish ke WP real | ⏳ | Next — butuh binding dashboard + secrets OAuth/WP credentials |
+| 9.6  | DO Worker (content-generator-queue) + binding QUEUE | 🔄 In Progress | worker/ dibuat, deploy ✅, bind API ✅; menunggu redeploy Pages via git push |
+| 9.5  | E2E test publish ke WP real | ⏸ Hold | Butuh WP test site — user belum punya (2026-08-25) |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -42,9 +43,11 @@
 - 2026-08-25 — LARANG Astro SSR adapter di proyek ini: _worker.js hasil build menimpa routing functions/ di Pages. Halaman guarded (calendar, publish-queue) = shell statis; auth/data via /api/* client-side. index.astro prerender.
 - 2026-08-25 — Pages config validation (wrangler v4) reject blok [triggers] dan [[durable_objects]] di wrangler.toml; drizzle-orm bundle import node:* → wajib compatibility_date >= 2024-09-23 + nodejs_compat
 - 2026-08-25 — Resources CF dibuat: Pages content-generator-e45.pages.dev, D1 content-generator id=103ffeac-1fd7-45cf-82f0-2b8f44322103 (migrasi remote 0001 ✅), KV content-generator-KV id=6806b090fb0e46e68185cc3a948842ab
+- 2026-08-25 — DO via Worker terpisah: Pages tak bisa define class DO; worker/ (content-generator-queue) re-export Queue, migrasi new_sqlite_classes (free plan wajib sqlite), namespace f61618b2... dibind ke Pages sebagai QUEUE via API. Default export fetch handler wajib agar ES module format.
+- 2026-08-25 — Secrets OAuth GitHub ternyata sudah terpasang di prod (GITHUB_CLIENT_ID/SECRET); login 302 → github.com verified live.
 
 ## Masalah yang Belum Terselesaikan
-- GitHub OAuth app credentials belum dibuat
+- ~~GitHub OAuth app credentials belum dibuat~~ ✅ 2026-08-25: secrets terpasang, login flow live
 - 9Router proxy configuration (port, API key) belum diverifikasi
 - Cloudflare Pages Functions local dev (`npx wrangler pages dev`) belum diuji
 - No mobile-first design in v1 scope
