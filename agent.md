@@ -24,7 +24,7 @@
 | 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
 | 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
 | 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
-| 9.6  | DO Worker (content-generator-queue) + binding QUEUE | 🔄 In Progress | worker/ dibuat, deploy ✅, bind API ✅; menunggu redeploy Pages via git push |
+| 9.6  | DO Worker (content-generator-queue) + binding QUEUE | ✅ Verified | deploy worker ✅ (new_sqlite_classes), bind QUEUE via API ✅, Pages redeploy 93fd53a ✅; smoke: / 200, /api/* 401 fail-closed, login 302 |
 | 9.5  | E2E test publish ke WP real | ⏸ Hold | Butuh WP test site — user belum punya (2026-08-25) |
 
 ## Keputusan Arsitektur
@@ -45,6 +45,7 @@
 - 2026-08-25 — Resources CF dibuat: Pages content-generator-e45.pages.dev, D1 content-generator id=103ffeac-1fd7-45cf-82f0-2b8f44322103 (migrasi remote 0001 ✅), KV content-generator-KV id=6806b090fb0e46e68185cc3a948842ab
 - 2026-08-25 — DO via Worker terpisah: Pages tak bisa define class DO; worker/ (content-generator-queue) re-export Queue, migrasi new_sqlite_classes (free plan wajib sqlite), namespace f61618b2... dibind ke Pages sebagai QUEUE via API. Default export fetch handler wajib agar ES module format.
 - 2026-08-25 — Secrets OAuth GitHub ternyata sudah terpasang di prod (GITHUB_CLIENT_ID/SECRET); login 302 → github.com verified live.
+- 2026-08-25 — Fix CI intermittent ERESOLVE: drizzle-zod (tak pernah diimport) dihapus; @cloudflare/workers-types v4→v5 supaya match peer wrangler@4. Build Pages non-deterministik (sukses/gagal bergantian di commit sama) akar masalah ini.
 
 ## Masalah yang Belum Terselesaikan
 - ~~GitHub OAuth app credentials belum dibuat~~ ✅ 2026-08-25: secrets terpasang, login flow live
