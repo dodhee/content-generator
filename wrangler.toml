@@ -5,16 +5,16 @@
 # dan referensi; Pages prod memakai binding yg di-set manual di Dashboard.
 name = "content-generator"
 pages_build_output_dir = "dist"
+# drizzle-orm (via functions bundle) import modul node:* → wajib nodejs_compat
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 NEXT_PUBLIC_APP_NAME = "AI Auto Content Generator"
 
-# Durable Object binding.
-# NOTE: untuk Pages, DO binding juga harus di-set via Dashboard > Settings > Functions
-# > Durable Object bindings (wrangler.toml tidak cukup untuk prod Pages).
-[[durable_objects.bindings]]
-name = "QUEUE"
-class_name = "Queue"
+# NOTE: Durable Object binding (QUEUE/Queue) untuk Pages WAJIB di-set via
+# Dashboard > Settings > Functions > Durable Object bindings.
+# Tidak boleh ada di wrangler.toml — Pages config validation reject (wrangler v4).
 
 # D1 binding — migrations dijalankan via npm script db:migrate:* (lihat package.json).
 [[d1_databases]]
@@ -22,7 +22,7 @@ binding = "DB"
 database_name = "content-generator"
 # Cara dapat database_id: jalankan `wrangler d1 create content-generator`,
 # lalu salin id yg dihasilkan ke sini. Untuk local dev placeholder ini OK.
-database_id = "REPLACE_WITH_REAL_ID"
+database_id = "103ffeac-1fd7-45cf-82f0-2b8f44322103"
 migrations_dir = "db/migrations"
 
 # KV binding.
@@ -30,4 +30,4 @@ migrations_dir = "db/migrations"
 # (wrangler pages dev). Ganti dengan id asli sebelum deploy.
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_REAL_ID"
+id = "6806b090fb0e46e68185cc3a948842ab"

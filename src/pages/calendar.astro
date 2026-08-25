@@ -1,39 +1,19 @@
+---
 // src/pages/calendar.astro
 // Calendar page with CalendarGrid island
 
-import Layout from '../layouts/Layout.astro';
 import { CalendarGrid } from '../components/CalendarGrid';
-import { validateSession } from '../lib/server/auth';
-import { listCalendarSlots } from '../lib/server/calendar';
-import { listArticles } from '../lib/server/articles';
-import type { Env } from '../lib/server/db';
+import Layout from '../layouts/Layout.astro';
 
-export async function getStaticPaths() {
-  return [];
-}
-
-export async function getServerContext() {
-  return {
-    env: {} as Env,
-  };
-}
-
-const { env } = Astro.locals as { env: Env };
-
-const sessionResult = await validateSession(Astro.request, env, env.GITHUB_CLIENT_SECRET ?? '');
-if (sessionResult instanceof Response) {
-  return Astro.redirect('/login');
-}
-
-const session = sessionResult;
-const workspaceId = session.user.workspace_id;
-
-const [year, month] = new Date().toISOString().split('-').slice(0, 2);
-const initialMonth = `${year}-${month}`;
-
-const slots = await listCalendarSlots(env.DB, workspaceId, { month: initialMonth });
-const articles = await listArticles(env.DB, workspaceId);
-
+// ponytail: data di-fetch client-side oleh CalendarGrid dari /api/calendar (fase berikutnya)
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
+const initialMonth = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
+const slots: never[] = [];
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
+const articles: never[] = [];
+// biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
+const workspaceId = '';
 ---
 
 <Layout>

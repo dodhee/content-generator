@@ -20,6 +20,7 @@
     "dev:functions": "wrangler pages dev . --port 8787 --compatibility-date=2024-01-01"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.2.4",
     "@astrojs/react": "^6.0.3",
     "@tailwindcss/vite": "^4.0.0",
     "astro": "^7.2.3",
@@ -43,6 +44,6 @@
     "tsx": "^4.19.4",
     "typescript": "^7.0.2",
     "vitest": "^2.1.4",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.125.0"
   }
 }

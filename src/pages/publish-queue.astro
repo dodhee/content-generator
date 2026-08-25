@@ -2,18 +2,9 @@
 import DriftDetector from '../components/DriftDetector';
 import PublishQueueTable from '../components/PublishQueueTable';
 import Layout from '../layouts/Layout.astro';
-import { validateSession } from '../lib/server/auth';
-import type { Env } from '../lib/server/db';
-
-const { env } = Astro.locals as { env: Env };
-
-const sessionResult = await validateSession(Astro.request, env, env.GITHUB_CLIENT_SECRET ?? '');
-if (sessionResult instanceof Response) {
-  return Astro.redirect('/login');
-}
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
-const workspaceId = sessionResult.user.workspace_id;
+const workspaceId = '';
 ---
 
 <Layout>

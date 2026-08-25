@@ -23,7 +23,8 @@
 | 10.3 | src/pages/publish-queue.astro | ✅ Verified | dashboard page; biome-ignore astro frontmatter FP |
 | 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
 | 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
-| 9.4  | E2E test publish ke WP real | 🔄 Prep done | wrangler.toml valid + db:migrate:* scripts siap; E2E sendiri masih butuh WP credentials |
+| 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
+| 9.5  | E2E test publish ke WP real | ⏳ | Next — butuh binding dashboard + secrets OAuth/WP credentials |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -38,6 +39,9 @@
 
 - 2026-08-25 — wrangler.toml: `d1_database` → `d1_databases` (wrangler v3 reject tunggal); KV id tidak boleh string kosong; [triggers] crons dihapus (Pages tidak dukung — scheduling via GitHub Actions)
 - 2026-08-25 — Script npm db:migrate:local/remote/create; migrations_dir = db/migrations
+- 2026-08-25 — LARANG Astro SSR adapter di proyek ini: _worker.js hasil build menimpa routing functions/ di Pages. Halaman guarded (calendar, publish-queue) = shell statis; auth/data via /api/* client-side. index.astro prerender.
+- 2026-08-25 — Pages config validation (wrangler v4) reject blok [triggers] dan [[durable_objects]] di wrangler.toml; drizzle-orm bundle import node:* → wajib compatibility_date >= 2024-09-23 + nodejs_compat
+- 2026-08-25 — Resources CF dibuat: Pages content-generator-e45.pages.dev, D1 content-generator id=103ffeac-1fd7-45cf-82f0-2b8f44322103 (migrasi remote 0001 ✅), KV content-generator-KV id=6806b090fb0e46e68185cc3a948842ab
 
 ## Masalah yang Belum Terselesaikan
 - GitHub OAuth app credentials belum dibuat

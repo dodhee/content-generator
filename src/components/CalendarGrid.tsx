@@ -78,7 +78,7 @@ export function CalendarGrid({
   onArticleDrop,
   onSlotCreate,
 }: CalendarGridProps) {
-  const [month, setMonth] = React.useState(initialMonth);
+  const [month, setMonth] = React.useState(initialMonth || new Date().toISOString().slice(0, 7));
   const [dragArticle, setDragArticle] = useState<ArticleRow | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlotRow | null>(null);
   const [year, monthNum] = month.split('-').map(Number) as [number, number];
