@@ -25,6 +25,8 @@
 | 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
 | 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
 | 9.6  | DO Worker (content-generator-queue) + binding QUEUE | ✅ Verified | deploy worker ✅ (new_sqlite_classes), bind QUEUE via API ✅, Pages redeploy 93fd53a ✅; smoke: / 200, /api/* 401 fail-closed, login 302 |
+| 10.1b | functions/api/publish/queue.ts | 🔄 In Progress | fix: GET /api/publish/queue jatuh ke [id].ts jobId='queue' → 404; workspace dari session bukan query param |
+| 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | 🔄 In Progress | ganti mock → fetch WP live via published_url slug + diff vs content_md (PRD US-13 AC-03) |
 | 9.5  | E2E test publish ke WP real | ⏸ Hold | Butuh WP test site — user belum punya (2026-08-25) |
 
 ## Keputusan Arsitektur
