@@ -2,6 +2,7 @@
 // GET /api/articles, POST /api/articles
 
 import { articleCreateSchema, createArticle, listArticles } from '../../../src/lib/server/articles';
+import { logAudit } from '../../../src/lib/server/audit';
 import { validateSession } from '../../../src/lib/server/auth';
 import type { ArticleCreate } from '../../../src/lib/server/types/article';
 
@@ -39,6 +40,13 @@ export const onRequest = async (context: {
         workspace_id: workspaceId, // enforce ownership
       });
       const created = await createArticle(env.DB, data);
+      await logAudit(env.DB, {
+        workspaceId,
+        articleId: created.id,
+        action: 'created',
+        actor: session.user.user_name,
+        details: { title: data.title ?? null },
+      });
       return new Response(JSON.stringify(created), {
         status: 201,
         headers: { 'Content-Type': 'application/json' },

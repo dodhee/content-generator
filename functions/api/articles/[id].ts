@@ -8,6 +8,7 @@ import {
   transitionArticleStatus,
   updateArticle,
 } from '../../../src/lib/server/articles';
+import { logAudit } from '../../../src/lib/server/audit';
 import { validateSession } from '../../../src/lib/server/auth';
 import {
   type ArticleStatus,
@@ -72,6 +73,12 @@ export const onRequest = async (context: {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      await logAudit(env.DB, {
+        workspaceId,
+        articleId,
+        action: 'edited',
+        actor: session.user.user_name,
+      });
       return new Response(JSON.stringify(updated), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -103,6 +110,12 @@ export const onRequest = async (context: {
             headers: { 'Content-Type': 'application/json' },
           });
         }
+        await logAudit(env.DB, {
+          workspaceId,
+          articleId,
+          action: `status:${data.status}`,
+          actor: session.user.user_name,
+        });
         return new Response(JSON.stringify(updated), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -126,6 +139,12 @@ export const onRequest = async (context: {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      await logAudit(env.DB, {
+        workspaceId,
+        articleId,
+        action: 'edited',
+        actor: session.user.user_name,
+      });
       return new Response(JSON.stringify(updated), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -147,6 +166,12 @@ export const onRequest = async (context: {
         headers: { 'Content-Type': 'application/json' },
       });
     }
+    await logAudit(env.DB, {
+      workspaceId,
+      articleId,
+      action: 'deleted',
+      actor: session.user.user_name,
+    });
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
