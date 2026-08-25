@@ -14,6 +14,9 @@
     "lint:check": "biome check .",
     "test:unit": "vitest run",
     "db:verify": "tsx db/verify.ts",
+    "db:migrate:local": "wrangler d1 migrations apply content-generator --local",
+    "db:migrate:remote": "wrangler d1 migrations apply content-generator --remote",
+    "db:migrate:create": "wrangler d1 migrations create content-generator",
     "dev:functions": "wrangler pages dev . --port 8787 --compatibility-date=2024-01-01"
   },
   "dependencies": {

@@ -29,3 +29,4 @@ local.db
 Thumbs.db
 .vscode/*
 !.vscode/settings.json
+.wrangler/

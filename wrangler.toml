@@ -1,18 +1,33 @@
+# wrangler.toml — Cloudflare Pages
+#
+# ⚠️ Prod bindings WAJIB dikonfigurasi ulang via Pages Dashboard > Settings > Functions
+# (pengalaman GoDev). wrangler.toml ini hanya untuk local dev (wrangler pages dev)
+# dan referensi; Pages prod memakai binding yg di-set manual di Dashboard.
 name = "content-generator"
 pages_build_output_dir = "dist"
 
 [vars]
 NEXT_PUBLIC_APP_NAME = "AI Auto Content Generator"
 
-# Bindings (set via Pages Dashboard → Settings → Functions)
+# Durable Object binding.
+# NOTE: untuk Pages, DO binding juga harus di-set via Dashboard > Settings > Functions
+# > Durable Object bindings (wrangler.toml tidak cukup untuk prod Pages).
 [[durable_objects.bindings]]
 name = "QUEUE"
 class_name = "Queue"
 
-[[d1_database]]
+# D1 binding — migrations dijalankan via npm script db:migrate:* (lihat package.json).
+[[d1_databases]]
 binding = "DB"
 database_name = "content-generator"
-# Also bind D1 via Dashboard → Settings → Functions for env var
+# Cara dapat database_id: jalankan `wrangler d1 create content-generator`,
+# lalu salin id yg dihasilkan ke sini. Untuk local dev placeholder ini OK.
+database_id = "REPLACE_WITH_REAL_ID"
+migrations_dir = "db/migrations"
 
-[triggers]
-crons = ["*/5 * * * *"]  # Queue processor every 5 min
+# KV binding.
+# NOTE: id di-set via Dashboard untuk prod; placeholder ini untuk local dev
+# (wrangler pages dev). Ganti dengan id asli sebelum deploy.
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_REAL_ID"

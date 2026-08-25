@@ -23,7 +23,7 @@
 | 10.3 | src/pages/publish-queue.astro | ✅ Verified | dashboard page; biome-ignore astro frontmatter FP |
 | 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
 | 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
-| 9.4  | E2E test publish ke WP real | ⏳ | Next — butuh wrangler pages dev + WP site credentials |
+| 9.4  | E2E test publish ke WP real | 🔄 Prep done | wrangler.toml valid + db:migrate:* scripts siap; E2E sendiri masih butuh WP credentials |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -35,6 +35,9 @@
 - 2026-08-19 — Biome v1.9.4 for lint/format, strict TS config with noUncheckedIndexedAccess
 - 2026-08-24 — CalendarGrid.tsx biome errors fixed (a11y + non-null assertion + index key + button type); state variables restored after Claude Code regression
 - 2026-08-24 — PublishQueueTable + DriftDetector components + publish-queue.astro page; biome-ignore added for astro frontmatter false-positive on workspaceId variable
+
+- 2026-08-25 — wrangler.toml: `d1_database` → `d1_databases` (wrangler v3 reject tunggal); KV id tidak boleh string kosong; [triggers] crons dihapus (Pages tidak dukung — scheduling via GitHub Actions)
+- 2026-08-25 — Script npm db:migrate:local/remote/create; migrations_dir = db/migrations
 
 ## Masalah yang Belum Terselesaikan
 - GitHub OAuth app credentials belum dibuat
