@@ -22,11 +22,11 @@
 | 9.3  | functions/api/publish/[id].ts | ✅ Verified | GET status (DO fallback DB) + PATCH /retry; DO payload key fixed (TASK_LIST Fase 9.3; 10.2 retry tercakup di sini) |
 | 10.3 | src/pages/publish-queue.astro | ✅ Verified | dashboard page; biome-ignore astro frontmatter FP |
 | 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
-| 10.5 | src/components/DriftDetector.tsx | ⚠️ Partial | UI done, masih MOCK data — butuh real drift API |
+| 10.5 | src/components/DriftDetector.tsx | ✅ Superseded 10.5b | lihat baris 10.5b — real API live |
 | 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
 | 9.6  | DO Worker (content-generator-queue) + binding QUEUE | ✅ Verified | deploy worker ✅ (new_sqlite_classes), bind QUEUE via API ✅, Pages redeploy 93fd53a ✅; smoke: / 200, /api/* 401 fail-closed, login 302 |
-| 10.1b | functions/api/publish/queue.ts | 🔄 In Progress | fix: GET /api/publish/queue jatuh ke [id].ts jobId='queue' → 404; workspace dari session bukan query param |
-| 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | 🔄 In Progress | ganti mock → fetch WP live via published_url slug + diff vs content_md (PRD US-13 AC-03) |
+| 10.1b | functions/api/publish/queue.ts | ✅ Verified | GET /api/publish/queue fix; workspace dari session; biome+tsc+build clean (92ed002) |
+| 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | ✅ Verified | fetch WP live via slug published_url, diff vs content_md; mock dihapus (PRD US-13 AC-03) |
 | 9.5  | E2E test publish ke WP real | ⏸ Hold | Butuh WP test site — user belum punya (2026-08-25) |
 
 ## Keputusan Arsitektur
