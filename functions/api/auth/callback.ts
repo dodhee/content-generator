@@ -52,10 +52,40 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     }),
   });
 
-  const tokenData = (await tokenResponse.json()) as { access_token?: string; error?: string };
-  if (!tokenData.access_token) {
-    console.error('Token exchange failed:', tokenData);
-    return new Response('Failed to exchange code for token', { status: 500 });
+  const tokenText = await tokenResponse.text();
+  let tokenData: { access_token?: string; error?: string };
+  try {
+    tokenData = JSON.parse(tokenText);
+  } catch {
+    const contentType = tokenResponse.headers.get('content-type') || 'unknown';
+    console.error('Token exchange failed - invalid JSON:', {
+      status: tokenResponse.status,
+      contentType,
+      bodyPreview: tokenText.slice(0, 200),
+    });
+    return new Response(
+      JSON.stringify({
+        error: 'Token exchange failed',
+        upstream_status: tokenResponse.status,
+      }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  if (!tokenResponse.ok || !tokenData.access_token) {
+    const contentType = tokenResponse.headers.get('content-type') || 'unknown';
+    console.error('Token exchange failed:', {
+      status: tokenResponse.status,
+      contentType,
+      bodyPreview: tokenText.slice(0, 200),
+    });
+    return new Response(
+      JSON.stringify({
+        error: 'Token exchange failed',
+        upstream_status: tokenResponse.status,
+      }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   const userResponse = await fetch('https://api.github.com/user', {
@@ -65,13 +95,40 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     },
   });
 
-  const user = (await userResponse.json()) as {
+  if (!userResponse.ok) {
+    console.error('GitHub /user API failed:', {
+      status: userResponse.status,
+    });
+    return new Response(
+      JSON.stringify({
+        error: 'Upstream GitHub API error',
+        upstream_status: userResponse.status,
+      }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const userText = await userResponse.text();
+  let user: {
     id: number;
     login: string;
     name: string | null;
     email: string | null;
     avatar_url: string;
   };
+  try {
+    user = JSON.parse(userText);
+  } catch {
+    console.error('GitHub /user API returned invalid JSON:', {
+      bodyPreview: userText.slice(0, 200),
+    });
+    return new Response(
+      JSON.stringify({
+        error: 'Upstream GitHub API error',
+      }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
   let userEmail: string | null = user.email ?? null;
   if (!userEmail) {
@@ -81,11 +138,40 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
         Accept: 'application/vnd.github.v3+json',
       },
     });
-    const emails = (await emailsResponse.json()) as Array<{
+
+    if (!emailsResponse.ok) {
+      console.error('GitHub /user/emails API failed:', {
+        status: emailsResponse.status,
+      });
+      return new Response(
+        JSON.stringify({
+          error: 'Upstream GitHub API error',
+          upstream_status: emailsResponse.status,
+        }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const emailsText = await emailsResponse.text();
+    let emails: Array<{
       email: string;
       primary: boolean;
       verified: boolean;
     }>;
+    try {
+      emails = JSON.parse(emailsText);
+    } catch {
+      console.error('GitHub /user/emails API returned invalid JSON:', {
+        bodyPreview: emailsText.slice(0, 200),
+      });
+      return new Response(
+        JSON.stringify({
+          error: 'Upstream GitHub API error',
+        }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     const primaryEmail = emails.find((e) => e.primary && e.verified);
     userEmail = primaryEmail?.email ?? null;
   }
