@@ -29,7 +29,7 @@
 | 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | ✅ Verified | fetch WP live via slug published_url, diff vs content_md; mock dihapus (PRD US-13 AC-03) |
 | 11.1-11.3 | Audit log: audit.ts + api/audit + wire articles | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired created/edited/status:*/deleted; tsc+biome+build clean (f4ff40e) |
 | 5.4b | Sites UI (/sites + SitesManager) | ✅ Verified | list/add/delete site, form kondisional per type, secret password-masked, a11y labels clean (1cfc9b0); nav link belum ada di Layout (tanpa nav existing) |
-| 9.5  | E2E test publish ke WP real | ⏸ Hold | Butuh WP test site — user belum punya (2026-08-25) |
+| 9.5  | E2E test publish ke WP real | 🔄 In Progress | test site ada (nalarpublik52.id ✅); bloker: OAuth callback crash 1101 (GitHub balas non-JSON) → hardening 502+log deployed 54e822c; menunggu retry login + baca log upstream |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
