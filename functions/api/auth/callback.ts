@@ -43,6 +43,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      'User-Agent': 'content-generator',
     },
     body: JSON.stringify({
       client_id: env.GITHUB_CLIENT_ID,
