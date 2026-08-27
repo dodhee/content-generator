@@ -4,7 +4,7 @@
 - **Nama Proyek**: AI Auto Content Generator
 - **Tech Stack**: Astro + React/Preact islands, Cloudflare Pages + Functions, D1, KV, R2, Durable Objects, 9Router/OpenRouter
 - **Tanggal Mulai**: 2026-08-19
-- **Update Terakhir**: 2026-08-24
+- **Update Terakhir**: 2026-08-27
 
 ## Status Fase
 | Fase | Deskripsi | Status | Catatan |
@@ -29,7 +29,7 @@
 | 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | ✅ Verified | fetch WP live via slug published_url, diff vs content_md; mock dihapus (PRD US-13 AC-03) |
 | 11.1-11.3 | Audit log: audit.ts + api/audit + wire articles | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired created/edited/status:*/deleted; tsc+biome+build clean (f4ff40e) |
 | 5.4b | Sites UI (/sites + SitesManager) | ✅ Verified | list/add/delete site, form kondisional per type, secret password-masked, a11y labels clean (1cfc9b0); nav link belum ada di Layout (tanpa nav existing) |
-| 9.5  | E2E test publish ke WP real | 🔄 In Progress | test site ada (nalarpublik52.id ✅); OAuth callback crash 1101 FIXED (hardening 502+log deployed 54e822c); login flow reaches callback BUT GitHub returns error → 502 upstream; need to read GitHub response body to diagnose |
+| 9.5  | E2E test publish ke WP real | ✅ Verified | OAuth callback crypto bug FIXED (cad00ab): HMAC algo mismatch; redirect callback → /sites (fa5b3ac); D1 ALTER sites ADD config_json; Add Site berhasil; deploy 1a9e0c36 live apps.codevx.web.id |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -51,13 +51,15 @@
 - 2026-08-25 — Secrets OAuth GitHub ternyata sudah terpasang di prod (GITHUB_CLIENT_ID/SECRET); login 302 → github.com verified live.
 - 2026-08-25 — Fix CI intermittent ERESOLVE: drizzle-zod (tak pernah diimport) dihapus; @cloudflare/workers-types v4→v5 supaya match peer wrangler@4. Build Pages non-deterministik (sukses/gagal bergantian di commit sama) akar masalah ini.
 
+- 2026-08-27 — OAuth callback crypto fix: `crypto.subtle.sign('HMAC', ...)` bukan `'SHA-256'`; CryptoKey algorithm mismatch resolved (cad00ab)
+- 2026-08-27 — OAuth redirect: callback → `/sites` bukan `/` untuk langsung ke dashboard (fa5b3ac)
+- 2026-08-27 — D1 schema migration: `ALTER TABLE sites ADD COLUMN config_json TEXT` via wrangler d1 execute --remote (0.62ms, 1 row written)
+- 2026-08-27 — Project name correction: Pages project = `content-generator` (bukan `godev`); URL = apps.codevx.web.id; deploy 1a9e0c36 live
+
 ## Masalah yang Belum Terselesaikan
-- ~~GitHub OAuth app credentials belum dibuat~~ ✅ 2026-08-25: secrets terpasang, login flow live
 - 9Router proxy configuration (port, API key) belum diverifikasi
 - Cloudflare Pages Functions local dev (`npx wrangler pages dev`) belum diuji
 - No mobile-first design in v1 scope
-- D1 local dev setup pending (Phase 2)
-- DriftDetector.tsx masih mock data (belum panggil API drift detection asli)
 
 ## Struktur Direktori
 ```
