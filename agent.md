@@ -4,7 +4,7 @@
 - **Nama Proyek**: AI Auto Content Generator
 - **Tech Stack**: Astro + React/Preact islands, Cloudflare Pages + Functions, D1, KV, R2, Durable Objects, 9Router/OpenRouter
 - **Tanggal Mulai**: 2026-08-19
-- **Update Terakhir**: 2026-08-27
+- **Update Terakhir**: 2026-08-28
 
 ## Status Fase
 | Fase | Deskripsi | Status | Catatan |
@@ -13,24 +13,15 @@
 | 1    | Project foundation, tooling, biome | ✅ | Complete |
 | 2    | D1 Schema, local dev DB, migrations | ✅ | Complete — Drizzle schema.js (8 tables, checks), migration 0001_initial.sql |
 | 3    | Auth middleware (GitHub OAuth) | ✅ | Complete — auth.ts, _middleware.ts, callback.ts, test 401 |
-| 4    | Workspace & Sites API + Frontend | ✅ | Complete — workspaces CRUD + sites CRUD + Zod validate + secrets masking |
-| 5    | Article CRUD + status pipeline | ✅ | Complete — article CRUD + versioning + status transitions validated |
-| 6    | AI Generation Pipeline | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
+| 4    | Workspace API & Frontend | ✅ | Complete — workspaces CRUD + Zod validate |
+| 5    | Sites API & UI | ✅ | Complete — sites CRUD + conditional forms + secrets masking + config_json migration |
+| 6    | Article CRUD & Versioning | ✅ | Complete — article CRUD + versioning + status transitions validated |
 | 7    | Content Calendar (MVP) | ✅ Verified | month view, week grouping, slot CRUD, drag-drop; biome+tsc clean |
-| 9.1  | wordpress.ts publishArticle() | ✅ Verified | WP REST API v2 POST /wp/v2/posts; biome+tsc clean (TASK_LIST Fase 9.1) |
-| 9.2  | functions/api/publish/index.ts | ✅ Verified | POST /api/publish enqueue + GET /api/publish/queue list (TASK_LIST Fase 9.2; 10.1 tercakup di sini) |
-| 9.3  | functions/api/publish/[id].ts | ✅ Verified | GET status (DO fallback DB) + PATCH /retry; DO payload key fixed (TASK_LIST Fase 9.3; 10.2 retry tercakup di sini) |
-| 10.3 | src/pages/publish-queue.astro | ✅ Verified | dashboard page; biome-ignore astro frontmatter FP |
-| 10.4 | src/components/PublishQueueTable.tsx | ✅ Verified | table + filter + retry button |
-| 10.5 | src/components/DriftDetector.tsx | ✅ Superseded 10.5b | lihat baris 10.5b — real API live |
-| 9.4  | Deploy Pages + resources CF live | ✅ Verified | Pages+D1+KV dibuat, migrasi remote ✅, deploy sukses; API fail-closed tanpa secrets (by design) |
-| 9.6  | DO Worker (content-generator-queue) + binding QUEUE | ✅ Verified | deploy worker ✅ (new_sqlite_classes), bind QUEUE via API ✅, Pages redeploy 93fd53a ✅; smoke: / 200, /api/* 401 fail-closed, login 302 |
-| 10.1b | functions/api/publish/queue.ts | ✅ Verified | GET /api/publish/queue fix; workspace dari session; biome+tsc+build clean (92ed002) |
-| 10.5b | Drift real API (drift.ts + api/drift + rewrite DriftDetector) | ✅ Verified | fetch WP live via slug published_url, diff vs content_md; mock dihapus (PRD US-13 AC-03) |
-| 11.1-11.3 | Audit log: audit.ts + api/audit + wire articles | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired created/edited/status:*/deleted; tsc+biome+build clean (f4ff40e) |
-| 5.4b | Sites UI (/sites + SitesManager) | ✅ Verified | list/add/delete site, form kondisional per type, secret password-masked, a11y labels clean (1cfc9b0); nav link belum ada di Layout (tanpa nav existing) |
-| 9.5  | E2E test publish ke WP real | ✅ Verified | OAuth callback crypto bug FIXED (cad00ab): HMAC algo mismatch; redirect callback → /sites (fa5b3ac); D1 ALTER sites ADD config_json; Add Site berhasil; deploy 1a9e0c36 live apps.codevx.web.id |
-| 12   | Dashboard Root + Global Navigation | 🔜 Next | INKONSISTENSI: root static, tidak ada nav antar halaman; PRD menuntut dashboard utama di /; perlu fase 12.1-12.5 di TASK_LIST.md |
+| 8    | AI Outline Generation | ✅ | Complete — 9Router/OpenRouter + DO queue + outline generation + status polling |
+| 9    | WordPress Publisher | ✅ Verified | Consolidated: 9.1 wordpress.ts, 9.2 enqueue API, 9.3 status/retry API, 9.4 CF deploy, 9.5 OAuth fix, 9.6 DO worker |
+| 10   | Publish Queue Dashboard | ✅ Verified | Consolidated: 10.1 queue API, 10.3 page, 10.4 table, 10.5 drift detector |
+| 11   | Audit Log & Monitoring | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired articles |
+| 12   | Dashboard Root + Global Navigation | 🔜 Next | Root dashboard + nav bar + OAuth redirect consistency; TASK_LIST_v2.md Fase 12 |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -57,6 +48,8 @@
 - 2026-08-27 — D1 schema migration: `ALTER TABLE sites ADD COLUMN config_json TEXT` via wrangler d1 execute --remote (0.62ms, 1 row written)
 - 2026-08-27 — Project name correction: Pages project = `content-generator` (bukan `godev`); URL = apps.codevx.web.id; deploy 1a9e0c36 live
 
+- 2026-08-28 — Phase numbering consolidation: TASK_LIST_v2.md created with linear 0-17 phases; agent.md updated; old fractional phases (9.1-9.6, 10.1b-10.5b, 5.4b, 11.1-11.3) merged into main phases 4-11; PRD traceability matrix added
+
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi
 - Cloudflare Pages Functions local dev (`npx wrangler pages dev`) belum diuji
@@ -67,8 +60,9 @@
 content_generator/
 ├── PRD.md
 ├── ARCHITECTURE.md
-├── TASK_LIST.md
-├── agent.md          ← THIS FILE
+├── TASK_LIST.md          ← LEGACY (v1, fractional phases)
+├── TASK_LIST_v2.md       ← CURRENT (linear 0-17 phases)
+├── agent.md              ← THIS FILE
 ├── package.json
 ├── astro.config.mjs
 ├── biome.json
