@@ -30,6 +30,7 @@
 | 11.1-11.3 | Audit log: audit.ts + api/audit + wire articles | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired created/edited/status:*/deleted; tsc+biome+build clean (f4ff40e) |
 | 5.4b | Sites UI (/sites + SitesManager) | ✅ Verified | list/add/delete site, form kondisional per type, secret password-masked, a11y labels clean (1cfc9b0); nav link belum ada di Layout (tanpa nav existing) |
 | 9.5  | E2E test publish ke WP real | ✅ Verified | OAuth callback crypto bug FIXED (cad00ab): HMAC algo mismatch; redirect callback → /sites (fa5b3ac); D1 ALTER sites ADD config_json; Add Site berhasil; deploy 1a9e0c36 live apps.codevx.web.id |
+| 12   | Dashboard Root + Global Navigation | 🔜 Next | INKONSISTENSI: root static, tidak ada nav antar halaman; PRD menuntut dashboard utama di /; perlu fase 12.1-12.5 di TASK_LIST.md |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
