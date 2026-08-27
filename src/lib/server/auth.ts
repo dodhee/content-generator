@@ -18,7 +18,8 @@ export interface ValidatedSession {
 
 const COOKIE_NAME = 'cg_session';
 const SESSION_TTL_SECONDS = 24 * 60 * 60;
-const HMAC_ALGO = 'SHA-256';
+const HMAC_ALGO = 'HMAC';
+const HMAC_HASH = 'SHA-256';
 
 /**
  * Get or create a workspace for a GitHub user
@@ -55,7 +56,7 @@ export async function signSession(data: SessionData, secret: string): Promise<st
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(secret),
-    { name: 'HMAC', hash: HMAC_ALGO },
+    { name: 'HMAC', hash: HMAC_HASH },
     false,
     ['sign'],
   );
@@ -87,7 +88,7 @@ export async function verifySession(token: string, secret: string): Promise<Sess
     const key = await crypto.subtle.importKey(
       'raw',
       encoder.encode(secret),
-      { name: 'HMAC', hash: HMAC_ALGO },
+      { name: 'HMAC', hash: HMAC_HASH },
       false,
       ['sign'],
     );
