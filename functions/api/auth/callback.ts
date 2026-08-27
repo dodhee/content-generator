@@ -77,12 +77,13 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     console.error('Token exchange failed:', {
       status: tokenResponse.status,
       contentType,
-      bodyPreview: tokenText.slice(0, 200),
+      body: tokenText,
     });
     return new Response(
       JSON.stringify({
         error: 'Token exchange failed',
         upstream_status: tokenResponse.status,
+        upstream_body: tokenText,
       }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },
     );
@@ -96,13 +97,16 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   });
 
   if (!userResponse.ok) {
+    const userErrorText = await userResponse.text();
     console.error('GitHub /user API failed:', {
       status: userResponse.status,
+      body: userErrorText,
     });
     return new Response(
       JSON.stringify({
         error: 'Upstream GitHub API error',
         upstream_status: userResponse.status,
+        upstream_body: userErrorText,
       }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },
     );
@@ -140,13 +144,16 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     });
 
     if (!emailsResponse.ok) {
+      const emailsErrorText = await emailsResponse.text();
       console.error('GitHub /user/emails API failed:', {
         status: emailsResponse.status,
+        body: emailsErrorText,
       });
       return new Response(
         JSON.stringify({
           error: 'Upstream GitHub API error',
           upstream_status: emailsResponse.status,
+          upstream_body: emailsErrorText,
         }),
         { status: 502, headers: { 'Content-Type': 'application/json' } },
       );

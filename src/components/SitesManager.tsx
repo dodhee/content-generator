@@ -9,7 +9,7 @@ interface Site {
   is_active: boolean;
 }
 
-export default function SitesManager({ workspaceId }: { workspaceId: string }) {
+export default function SitesManager(_props: { workspaceId: string }) {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
