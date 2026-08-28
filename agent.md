@@ -21,7 +21,7 @@
 | 9    | WordPress Publisher | ✅ Verified | Consolidated: 9.1 wordpress.ts, 9.2 enqueue API, 9.3 status/retry API, 9.4 CF deploy, 9.5 OAuth fix, 9.6 DO worker |
 | 10   | Publish Queue Dashboard | ✅ Verified | Consolidated: 10.1 queue API, 10.3 page, 10.4 table, 10.5 drift detector |
 | 11   | Audit Log & Monitoring | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired articles |
-| 12   | Dashboard Root + Global Navigation | 🔜 Next | Root dashboard + nav bar + OAuth redirect consistency; TASK_LIST_v2.md Fase 12 |
+| 12   | Dashboard Root + Global Navigation | ✅ Verified | Root dashboard + nav bar + OAuth redirect consistency; deploy 4cb5fff9 live apps.codevx.web.id |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -49,6 +49,8 @@
 - 2026-08-27 — Project name correction: Pages project = `content-generator` (bukan `godev`); URL = apps.codevx.web.id; deploy 1a9e0c36 live
 
 - 2026-08-28 — Phase numbering consolidation: TASK_LIST_v2.md created with linear 0-17 phases; agent.md updated; old fractional phases (9.1-9.6, 10.1b-10.5b, 5.4b, 11.1-11.3) merged into main phases 4-11; PRD traceability matrix added
+
+- 2026-08-28 — Fase 12 complete: Dashboard Root + Global Navigation deployed (4cb5fff9); Navigation.tsx (SolidJS), DashboardStats.tsx + /api/dashboard/stats, TodaySchedule.tsx + /api/articles/scheduled-today; Layout.astro conditional nav; all auth pages wired; OAuth callback redirect fixed; Astro multi-framework (React + SolidJS) configured
 
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi

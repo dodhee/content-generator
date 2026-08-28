@@ -154,7 +154,7 @@
 
 ---
 
-## Fase 12 — Dashboard Root + Global Navigation 🔜 NEXT
+## Fase 12 — Dashboard Root + Global Navigation ✅ VERIFIED
 **Scope:** Root dashboard, global nav, OAuth redirect consistency
 **Files:** `src/pages/index.astro`, `src/components/Navigation.tsx`, `src/components/DashboardStats.tsx`, `src/components/TodaySchedule.tsx`, `src/layouts/Layout.astro`, `functions/api/dashboard/stats.ts`, `functions/api/auth/callback.ts`
 **Tasks:**
