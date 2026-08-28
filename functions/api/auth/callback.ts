@@ -207,7 +207,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   return new Response(null, {
     status: 302,
     headers: {
-      Location: `${url.origin}/sites`,
+      Location: `${url.origin}/`,
       'Set-Cookie': cookie,
     },
   });

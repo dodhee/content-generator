@@ -14,11 +14,12 @@ const slots: never[] = [];
 const articles: never[] = [];
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
 const workspaceId = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const userName = '';
 ---
 
-<Layout>
+<Layout title="Calendar" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Content Calendar</h1>
     <CalendarGrid
       client:load
       workspaceId={workspaceId}

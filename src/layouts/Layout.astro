@@ -1,4 +1,12 @@
 ---
+interface Props {
+  title?: string;
+  showNav?: boolean;
+  workspaceId?: string;
+  userName?: string;
+}
+
+const { title, showNav = false, workspaceId = '', userName = '' } = Astro.props;
 import '../styles/global.css';
 ---
 
@@ -9,9 +17,14 @@ import '../styles/global.css';
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title><slot name="title">AI Auto Content Generator</slot></title>
+    <title>{title || 'AI Auto Content Generator'}</title>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-    <slot />
+    {showNav && (
+      <Navigation client:load workspaceId={workspaceId} userName={userName} />
+    )}
+    <main class="pt-16">
+      <slot />
+    </main>
   </body>
 </html>

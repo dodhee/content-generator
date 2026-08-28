@@ -4,11 +4,12 @@ import Layout from '../layouts/Layout.astro';
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
 const workspaceId = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const userName = '';
 ---
 
-<Layout>
+<Layout title="Sites" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Sites</h1>
     <SitesManager client:load workspaceId={workspaceId} />
   </div>
 </Layout>

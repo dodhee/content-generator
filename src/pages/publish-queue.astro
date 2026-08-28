@@ -5,12 +5,12 @@ import Layout from '../layouts/Layout.astro';
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
 const workspaceId = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const userName = '';
 ---
 
-<Layout>
+<Layout title="Publish Queue" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Publish Queue</h1>
-
     <div class="grid grid-cols-1 gap-8">
       <DriftDetector client:load workspaceId={workspaceId} />
       <PublishQueueTable client:load workspaceId={workspaceId} />
