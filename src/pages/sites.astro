@@ -1,15 +1,21 @@
 ---
 import SitesManager from '../components/SitesManager';
+import StyleDNAPanel from '../components/StyleDNAPanel';
 import Layout from '../layouts/Layout.astro';
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX below via client:load
 const workspaceId = '';
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const userName = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
+const selectedSiteId = Astro.url.searchParams.get('site') || '';
 ---
 
 <Layout title="Sites" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
     <SitesManager client:only="react" workspaceId={workspaceId} />
+    <div class="mt-8">
+      <StyleDNAPanel client:only="solid-js" siteId={selectedSiteId} />
+    </div>
   </div>
 </Layout>

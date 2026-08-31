@@ -53,6 +53,31 @@ export const onRequest = async (context: {
     });
   }
 
+  if (method === 'POST') {
+    try {
+      const url = new URL(request.url);
+      if (url.pathname.endsWith('/analyze-style')) {
+        // Trigger Style DNA analysis
+        const { analyzeSiteStyle, saveStyleDNA } = await import(
+          '../../../src/lib/server/ai/style-dna'
+        );
+        const result = await analyzeSiteStyle(env, siteId, 150);
+        await saveStyleDNA(env, siteId, result);
+        return new Response(JSON.stringify({ success: true, result }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response('Not found', { status: 404 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      return new Response(JSON.stringify({ error: message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   if (method === 'PATCH') {
     try {
       const body = await request.json();

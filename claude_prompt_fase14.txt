@@ -1,0 +1,47 @@
+## TARGET GOAL & CONTEXT
+Implement Fase 14 — Style DNA (PRD US-04) for AI Auto Content Generator.
+
+**PRD US-04**: Analyze site content, extract brand voice, inject few-shot examples into generation prompts.
+
+**Current State**: 
+- D1 schema has `sites.wp_style_dna` (TEXT, few-shot examples JSON) and `sites.wp_style_vector` (BLOB)
+- `router.ts` already reads `wp_style_dna` and injects into outline prompts (lines 158, 162)
+- `generateOutline` in router.ts builds prompts with Style DNA if available
+- Need to create the analysis pipeline that populates `wp_style_dna`
+
+**Scope per TASK_LIST_v2.md Fase 14**:
+1. `src/lib/server/ai/style-dna.ts` — Core analysis: crawl 50-200 posts via REST/Git/sitemap, extract sentence length, vocab diversity, transitions, heading depth, CTA patterns, generate 3-5 few-shot examples
+2. `functions/api/style-dna/index.ts` — API endpoints: POST /analyze (trigger analysis), GET /status, POST /reanalyze
+3. `src/components/StyleDNAPanel.tsx` — UI: Analyze button, progress, show extracted patterns, few-shot preview, re-analyze button
+
+## FILE BOUNDARIES
+CREATE new files:
+- src/lib/server/ai/style-dna.ts
+- functions/api/style-dna/index.ts
+- src/components/StyleDNAPanel.tsx
+
+MODIFY existing:
+- functions/api/sites/[id].ts — add style-dna trigger endpoint or wire to site update
+- src/pages/sites.astro — add StyleDNAPanel to site detail view
+
+DO NOT TOUCH:
+- router.ts (already consumes wp_style_dna)
+- generate/outline.ts (already calls generateOutline)
+- db/schema.ts (wp_style_dna column exists)
+
+## SPECIFIC RULES
+- Follow CLAUDE.md: Biome lint, TS strict, no 'any', type-only imports
+- Use 9Router via callRouter() for AI analysis (same pattern as router.ts)
+- Fail-open for external fetches (WP REST, GitHub API, sitemap)
+- Store few-shot as JSON string in wp_style_dna: { examples: [{title, content}], patterns: {...} }
+- Max 200 posts analyzed, timeout 60s per batch
+- SolidJS for components, React only for CalendarGrid
+
+## VERIFICATION & OUTPUT CONTROL
+Run after implementation:
+1. npm run lint  (must pass, no errors)
+2. npm run build (must pass)
+3. Only report: STATUS PASS/FAIL + any error lines
+4. Do NOT output full stdout
+
+Deliver: 3 new files + 2 modified files, all passing lint+build.

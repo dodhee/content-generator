@@ -1,5 +1,8 @@
-import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+// src/components/SitesManager.tsx
+// SolidJS component for site management with Style DNA panel
+
+import { createEffect, createSignal, onMount } from 'solid-js';
+import { StyleDNAPanel } from './StyleDNAPanel';
 
 interface Site {
   id: string;
@@ -9,29 +12,51 @@ interface Site {
   is_active: boolean;
 }
 
-export default function SitesManager(_props: { workspaceId: string }) {
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+interface FormState {
+  name: string;
+  type: 'wordpress' | 'blogger' | 'astro' | 'webhook';
+  wpUrl: string;
+  wpUsername: string;
+  wpAppPassword: string;
+  bloggerBlogId: string;
+  bloggerRefreshToken: string;
+  githubRepo: string;
+  githubBranch: string;
+  webhookUrl: string;
+  webhookSecret: string;
+  defaultCategory: string;
+}
 
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'wordpress' | 'blogger' | 'astro' | 'webhook'>('wordpress');
-  const [wpUrl, setWpUrl] = useState('');
-  const [wpUsername, setWpUsername] = useState('');
-  const [wpAppPassword, setWpAppPassword] = useState('');
-  const [bloggerBlogId, setBloggerBlogId] = useState('');
-  const [bloggerRefreshToken, setBloggerRefreshToken] = useState('');
-  const [githubRepo, setGithubRepo] = useState('');
-  const [githubBranch, setGithubBranch] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [webhookSecret, setWebhookSecret] = useState('');
-  const [defaultCategory, setDefaultCategory] = useState('');
+export function SitesManager(_props: { workspaceId: string }) {
+  const [sites, setSites] = createSignal<Site[]>([]);
+  const [_loading, setLoading] = createSignal(true);
+  const [_error, setError] = createSignal<string | null>(null);
+  const [formError, setFormError] = createSignal<string | null>(null);
+  const [selectedSite, setSelectedSite] = createSignal<Site | null>(null);
+  const [siteDNA, setSiteDNA] = createSignal<{
+    has_dna: boolean;
+    dna: { examples: unknown[]; patterns: unknown; analyzedAt: string; postCount: number } | null;
+  } | null>(null);
 
-  const fetchSites = useCallback(async () => {
+  const [form, setForm] = createSignal<FormState>({
+    name: '',
+    type: 'wordpress',
+    wpUrl: '',
+    wpUsername: '',
+    wpAppPassword: '',
+    bloggerBlogId: '',
+    bloggerRefreshToken: '',
+    githubRepo: '',
+    githubBranch: 'main',
+    webhookUrl: '',
+    webhookSecret: '',
+    defaultCategory: '',
+  });
+
+  const fetchSites = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/sites');
+      const response = await fetch('/api/sites', { credentials: 'include' });
       if (response.status === 401) {
         setError('Not authenticated');
         setLoading(false);
@@ -47,111 +72,109 @@ export default function SitesManager(_props: { workspaceId: string }) {
           }) => ({
             id: item.row.id,
             name: item.row.name,
-            type: item.row.type,
+            type: item.row.type as Site['type'],
             config: item.config,
             is_active: item.row.is_active === 1,
           }),
         ),
       );
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  useEffect(() => {
+  onMount(() => {
     fetchSites();
-  }, [fetchSites]);
+  });
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      if (!confirm('Delete site?')) return;
-      try {
-        const response = await fetch(`/api/sites/${id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Delete failed');
-        fetchSites();
-      } catch (err) {
-        console.error('Delete failed', err);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete site?')) return;
+    try {
+      const response = await fetch(`/api/sites/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Delete failed');
+      fetchSites();
+    } catch (err) {
+      console.error('Delete failed', err);
+    }
+  };
+
+  const handleSelectSite = (site: Site) => {
+    setSelectedSite(site);
+    // Fetch Style DNA status for this site
+    fetch(`/api/style-dna?site_id=${site.id}`, { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setSiteDNA(data);
+      })
+      .catch(() => setSiteDNA(null));
+  };
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setFormError(null);
+
+    const f = form();
+    const config: Record<string, unknown> = {};
+    if (f.type === 'wordpress') {
+      config.wp_url = f.wpUrl;
+      config.wp_username = f.wpUsername;
+      config.wp_app_password = f.wpAppPassword;
+    } else if (f.type === 'blogger') {
+      config.blogger_blog_id = f.bloggerBlogId;
+      config.blogger_refresh_token = f.bloggerRefreshToken;
+    } else if (f.type === 'astro') {
+      config.github_repo = f.githubRepo;
+      config.github_branch = f.githubBranch;
+    } else if (f.type === 'webhook') {
+      config.webhook_url = f.webhookUrl;
+      config.webhook_secret = f.webhookSecret;
+    }
+    if (f.defaultCategory) {
+      config.default_category = f.defaultCategory;
+    }
+
+    try {
+      const response = await fetch('/api/sites', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: f.name,
+          type: f.type,
+          config,
+          is_active: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create site');
       }
-    },
-    [fetchSites],
-  );
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setFormError(null);
-
-      const config: Record<string, unknown> = {};
-      if (type === 'wordpress') {
-        config.wp_url = wpUrl;
-        config.wp_username = wpUsername;
-        config.wp_app_password = wpAppPassword;
-      } else if (type === 'blogger') {
-        config.blogger_blog_id = bloggerBlogId;
-        config.blogger_refresh_token = bloggerRefreshToken;
-      } else if (type === 'astro') {
-        config.github_repo = githubRepo;
-        config.github_branch = githubBranch;
-      } else if (type === 'webhook') {
-        config.webhook_url = webhookUrl;
-        config.webhook_secret = webhookSecret;
-      }
-      if (defaultCategory) {
-        config.default_category = defaultCategory;
-      }
-
-      try {
-        const response = await fetch('/api/sites', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            type,
-            config,
-            is_active: true,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to create site');
-        }
-
-        setName('');
-        setType('wordpress');
-        setWpUrl('');
-        setWpUsername('');
-        setWpAppPassword('');
-        setBloggerBlogId('');
-        setBloggerRefreshToken('');
-        setGithubRepo('');
-        setGithubBranch('');
-        setWebhookUrl('');
-        setWebhookSecret('');
-        setDefaultCategory('');
-        fetchSites();
-      } catch (err: unknown) {
-        setFormError(err instanceof Error ? err.message : 'Unknown error');
-      }
-    },
-    [
-      name,
-      type,
-      wpUrl,
-      wpUsername,
-      wpAppPassword,
-      bloggerBlogId,
-      bloggerRefreshToken,
-      githubRepo,
-      githubBranch,
-      webhookUrl,
-      webhookSecret,
-      defaultCategory,
-      fetchSites,
-    ],
-  );
+      setForm({
+        name: '',
+        type: 'wordpress',
+        wpUrl: '',
+        wpUsername: '',
+        wpAppPassword: '',
+        bloggerBlogId: '',
+        bloggerRefreshToken: '',
+        githubRepo: '',
+        githubBranch: 'main',
+        webhookUrl: '',
+        webhookSecret: '',
+        defaultCategory: '',
+      });
+      fetchSites();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Unknown error');
+    }
+  };
 
   const getUrl = (site: Site): string => {
     if (site.type === 'wordpress') return (site.config.wp_url as string) || '';
@@ -162,54 +185,58 @@ export default function SitesManager(_props: { workspaceId: string }) {
     return '';
   };
 
-  if (loading) return <div className="text-slate-400">Loading...</div>;
-  if (error) {
-    if (error === 'Not authenticated') {
-      return (
-        <div className="text-slate-400">
-          Not authenticated.{' '}
-          <a href="/api/auth/login" className="text-blue-400 underline">
-            Login
-          </a>
-        </div>
-      );
-    }
-    return <div className="text-red-500">Error: {error}</div>;
-  }
+  const updateField = (field: keyof FormState, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const typeOptions = [
+    { value: 'wordpress', label: 'WordPress' },
+    { value: 'blogger', label: 'Blogger' },
+    { value: 'astro', label: 'Astro' },
+    { value: 'webhook', label: 'Webhook' },
+  ] as const;
 
   return (
-    <div className="space-y-8">
-      <div className="border border-slate-700 rounded-lg p-6 bg-slate-900">
-        <h2 className="text-xl font-semibold mb-4">Sites</h2>
-        {sites.length === 0 ? (
-          <div className="text-slate-400">No sites</div>
+    <div class="space-y-8">
+      <div class="border border-slate-700 rounded-lg p-6 bg-slate-900">
+        <h2 class="text-xl font-semibold mb-4">Sites</h2>
+        {sites().length === 0 ? (
+          <div class="text-slate-400">No sites</div>
         ) : (
-          <table className="w-full">
+          <table class="w-full">
             <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left py-2 px-3 text-slate-400">Name</th>
-                <th className="text-left py-2 px-3 text-slate-400">Type</th>
-                <th className="text-left py-2 px-3 text-slate-400">URL</th>
-                <th className="text-left py-2 px-3 text-slate-400">Active</th>
-                <th className="text-left py-2 px-3 text-slate-400">Actions</th>
+              <tr class="border-b border-slate-700">
+                <th class="text-left py-2 px-3 text-slate-400">Name</th>
+                <th class="text-left py-2 px-3 text-slate-400">Type</th>
+                <th class="text-left py-2 px-3 text-slate-400">URL</th>
+                <th class="text-left py-2 px-3 text-slate-400">Active</th>
+                <th class="text-left py-2 px-3 text-slate-400">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {sites.map((site) => (
-                <tr key={site.id} className="border-b border-slate-800">
-                  <td className="py-2 px-3">{site.name}</td>
-                  <td className="py-2 px-3">
-                    <span className="inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-300">
+              {sites().map((site) => (
+                <tr key={site.id} class="border-b border-slate-800">
+                  <td class="py-2 px-3">
+                    <button
+                      type="button"
+                      class="w-full text-left cursor-pointer hover:text-blue-400"
+                      onClick={() => handleSelectSite(site)}
+                    >
+                      {site.name}
+                    </button>
+                  </td>
+                  <td class="py-2 px-3">
+                    <span class="inline-block px-2 py-1 text-xs rounded bg-slate-700 text-slate-300">
                       {site.type}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-slate-400 truncate max-w-xs">{getUrl(site)}</td>
-                  <td className="py-2 px-3">{site.is_active ? '✓' : '—'}</td>
-                  <td className="py-2 px-3">
+                  <td class="py-2 px-3 text-slate-400 truncate max-w-xs">{getUrl(site)}</td>
+                  <td class="py-2 px-3">{site.is_active ? '✓' : '—'}</td>
+                  <td class="py-2 px-3">
                     <button
                       type="button"
                       onClick={() => handleDelete(site.id)}
-                      className="text-red-400 hover:text-red-300"
+                      class="text-red-400 hover:text-red-300"
                     >
                       Delete
                     </button>
@@ -221,199 +248,223 @@ export default function SitesManager(_props: { workspaceId: string }) {
         )}
       </div>
 
-      <div className="border border-slate-700 rounded-lg p-6 bg-slate-900">
-        <h2 className="text-xl font-semibold mb-4">Add Site</h2>
-        {formError && <div className="mb-4 text-red-500">{formError}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {selectedSite() && (
+        <div class="border border-slate-700 rounded-lg p-6 bg-slate-900">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">{selectedSite().name} — Style DNA</h2>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSite(null);
+                setSiteDNA(null);
+              }}
+              class="text-slate-400 hover:text-slate-300"
+            >
+              ✕
+            </button>
+          </div>
+          <StyleDNAPanel siteId={selectedSite().id} initialDNA={siteDNA() ?? undefined} />
+        </div>
+      )}
+
+      <div class="border border-slate-700 rounded-lg p-6 bg-slate-900">
+        <h2 class="text-xl font-semibold mb-4">Add Site</h2>
+        {formError() && <div class="mb-4 text-red-500">{formError()}</div>}
+        <form onSubmit={handleSubmit} class="space-y-4">
           <div>
-            <label htmlFor="site-name" className="block text-sm text-slate-400 mb-1">
+            <label htmlFor="site-name" class="block text-sm text-slate-400 mb-1">
               Name
             </label>
             <input
               id="site-name"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={form().name}
+              onInput={(e) => updateField('name', (e.target as HTMLInputElement).value)}
               required
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+              class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
             />
           </div>
 
           <div>
-            <label htmlFor="site-type" className="block text-sm text-slate-400 mb-1">
+            <label htmlFor="site-type" class="block text-sm text-slate-400 mb-1">
               Type
             </label>
             <select
               id="site-type"
-              value={type}
-              onChange={(e) => setType(e.target.value as typeof type)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+              value={form().type}
+              onChange={(e) =>
+                updateField('type', (e.target as HTMLSelectElement).value as FormState['type'])
+              }
+              class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
             >
-              <option value="wordpress">WordPress</option>
-              <option value="blogger">Blogger</option>
-              <option value="astro">Astro</option>
-              <option value="webhook">Webhook</option>
+              {typeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
 
-          {type === 'wordpress' && (
+          {form().type === 'wordpress' && (
             <>
               <div>
-                <label htmlFor="wp-url" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="wp-url" class="block text-sm text-slate-400 mb-1">
                   WordPress URL
                 </label>
                 <input
                   id="wp-url"
                   type="url"
-                  value={wpUrl}
-                  onChange={(e) => setWpUrl(e.target.value)}
+                  value={form().wpUrl}
+                  onInput={(e) => updateField('wpUrl', (e.target as HTMLInputElement).value)}
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
               <div>
-                <label htmlFor="wp-username" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="wp-username" class="block text-sm text-slate-400 mb-1">
                   Username
                 </label>
                 <input
                   id="wp-username"
                   type="text"
-                  value={wpUsername}
-                  onChange={(e) => setWpUsername(e.target.value)}
+                  value={form().wpUsername}
+                  onInput={(e) => updateField('wpUsername', (e.target as HTMLInputElement).value)}
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
               <div>
-                <label htmlFor="wp-app-password" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="wp-app-password" class="block text-sm text-slate-400 mb-1">
                   App Password
                 </label>
                 <input
                   id="wp-app-password"
                   type="password"
-                  value={wpAppPassword}
-                  onChange={(e) => setWpAppPassword(e.target.value)}
+                  value={form().wpAppPassword}
+                  onInput={(e) =>
+                    updateField('wpAppPassword', (e.target as HTMLInputElement).value)
+                  }
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
             </>
           )}
 
-          {type === 'blogger' && (
+          {form().type === 'blogger' && (
             <>
               <div>
-                <label htmlFor="blogger-blog-id" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="blogger-blog-id" class="block text-sm text-slate-400 mb-1">
                   Blog ID
                 </label>
                 <input
                   id="blogger-blog-id"
                   type="text"
-                  value={bloggerBlogId}
-                  onChange={(e) => setBloggerBlogId(e.target.value)}
+                  value={form().bloggerBlogId}
+                  onInput={(e) =>
+                    updateField('bloggerBlogId', (e.target as HTMLInputElement).value)
+                  }
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
               <div>
-                <label
-                  htmlFor="blogger-refresh-token"
-                  className="block text-sm text-slate-400 mb-1"
-                >
+                <label htmlFor="blogger-refresh-token" class="block text-sm text-slate-400 mb-1">
                   Refresh Token
                 </label>
                 <input
                   id="blogger-refresh-token"
                   type="password"
-                  value={bloggerRefreshToken}
-                  onChange={(e) => setBloggerRefreshToken(e.target.value)}
+                  value={form().bloggerRefreshToken}
+                  onInput={(e) =>
+                    updateField('bloggerRefreshToken', (e.target as HTMLInputElement).value)
+                  }
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
             </>
           )}
 
-          {type === 'astro' && (
+          {form().type === 'astro' && (
             <>
               <div>
-                <label htmlFor="github-repo" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="github-repo" class="block text-sm text-slate-400 mb-1">
                   GitHub Repo
                 </label>
                 <input
                   id="github-repo"
                   type="text"
-                  value={githubRepo}
-                  onChange={(e) => setGithubRepo(e.target.value)}
+                  value={form().githubRepo}
+                  onInput={(e) => updateField('githubRepo', (e.target as HTMLInputElement).value)}
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                   placeholder="owner/repo"
                 />
               </div>
               <div>
-                <label htmlFor="github-branch" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="github-branch" class="block text-sm text-slate-400 mb-1">
                   Branch
                 </label>
                 <input
                   id="github-branch"
                   type="text"
-                  value={githubBranch}
-                  onChange={(e) => setGithubBranch(e.target.value)}
+                  value={form().githubBranch}
+                  onInput={(e) => updateField('githubBranch', (e.target as HTMLInputElement).value)}
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                   placeholder="main"
                 />
               </div>
             </>
           )}
 
-          {type === 'webhook' && (
+          {form().type === 'webhook' && (
             <>
               <div>
-                <label htmlFor="webhook-url" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="webhook-url" class="block text-sm text-slate-400 mb-1">
                   Webhook URL
                 </label>
                 <input
                   id="webhook-url"
                   type="url"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  value={form().webhookUrl}
+                  onInput={(e) => updateField('webhookUrl', (e.target as HTMLInputElement).value)}
                   required
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
               <div>
-                <label htmlFor="webhook-secret" className="block text-sm text-slate-400 mb-1">
+                <label htmlFor="webhook-secret" class="block text-sm text-slate-400 mb-1">
                   Webhook Secret
                 </label>
                 <input
                   id="webhook-secret"
                   type="password"
-                  value={webhookSecret}
-                  onChange={(e) => setWebhookSecret(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+                  value={form().webhookSecret}
+                  onInput={(e) =>
+                    updateField('webhookSecret', (e.target as HTMLInputElement).value)
+                  }
+                  class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
             </>
           )}
 
           <div>
-            <label htmlFor="default-category" className="block text-sm text-slate-400 mb-1">
+            <label htmlFor="default-category" class="block text-sm text-slate-400 mb-1">
               Default Category (optional)
             </label>
             <input
               id="default-category"
               type="text"
-              value={defaultCategory}
-              onChange={(e) => setDefaultCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
+              value={form().defaultCategory}
+              onInput={(e) => updateField('defaultCategory', (e.target as HTMLInputElement).value)}
+              class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
             />
           </div>
 
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
-          >
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white">
             Add Site
           </button>
         </form>
