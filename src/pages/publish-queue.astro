@@ -12,8 +12,8 @@ const userName = '';
 <Layout title="Publish Queue" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
     <div class="grid grid-cols-1 gap-8">
-      <DriftDetector client:load workspaceId={workspaceId} />
-      <PublishQueueTable client:load workspaceId={workspaceId} />
+      <DriftDetector client:only="react" workspaceId={workspaceId} />
+      <PublishQueueTable client:only="react" workspaceId={workspaceId} />
     </div>
   </div>
 </Layout>

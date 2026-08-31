@@ -10,6 +10,7 @@ interface NavigationProps {
 
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: '📊' },
+  { href: '/generate', label: 'Generate', icon: '✨' },
   { href: '/sites', label: 'Sites', icon: '🌐' },
   { href: '/calendar', label: 'Calendar', icon: '📅' },
   { href: '/publish-queue', label: 'Queue', icon: '📦' },
@@ -58,7 +59,11 @@ export function Navigation(props: NavigationProps) {
         <div class="flex h-16 items-center justify-between">
           {/* Logo + Nav Links */}
           <div class="flex items-center gap-8">
-            <a href="/" class="flex items-center gap-2 text-xl font-bold text-cyan-400" title="Dashboard">
+            <a
+              href="/"
+              class="flex items-center gap-2 text-xl font-bold text-cyan-400"
+              title="Dashboard"
+            >
               <span>⚡</span>
               <span class="hidden sm:inline">AI Content Gen</span>
             </a>
@@ -69,7 +74,8 @@ export function Navigation(props: NavigationProps) {
                   key={item.href}
                   href={item.href}
                   class={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activePath() === item.href || (item.href !== '/' && activePath().startsWith(item.href))
+                    activePath() === item.href ||
+                    (item.href !== '/' && activePath().startsWith(item.href))
                       ? 'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-500'
                       : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/50'
                   }`}
@@ -84,6 +90,7 @@ export function Navigation(props: NavigationProps) {
           {/* User Menu */}
           <div class="user-menu relative">
             <button
+              type="button"
               onClick={toggleDropdown}
               class="flex items-center gap-3 px-4 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
               aria-expanded={dropdownOpen()}
@@ -93,8 +100,20 @@ export function Navigation(props: NavigationProps) {
                 {userName().charAt(0).toUpperCase()}
               </div>
               <span class="hidden sm:inline text-sm font-medium text-slate-100">{userName()}</span>
-              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                class="w-4 h-4 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-label="Open user menu"
+              >
+                <title>Open user menu</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -105,11 +124,24 @@ export function Navigation(props: NavigationProps) {
                   <p class="text-sm font-mono text-slate-300 truncate">{props.workspaceId}</p>
                 </div>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:text-red-400 hover:bg-slate-700/50 transition-colors"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-label="Logout"
+                  >
+                    <title>Logout</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
                   </svg>
                   Logout
                 </button>

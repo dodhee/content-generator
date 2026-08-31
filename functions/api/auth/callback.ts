@@ -91,12 +91,12 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   }
 
   const userResponse = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-        Accept: 'application/vnd.github.v3+json',
-        'User-Agent': 'content-generator',
-      },
-    });
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'content-generator',
+    },
+  });
 
   if (!userResponse.ok) {
     const userErrorText = await userResponse.text();
@@ -139,12 +139,12 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   let userEmail: string | null = user.email ?? null;
   if (!userEmail) {
     const emailsResponse = await fetch('https://api.github.com/user/emails', {
-        headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
-          Accept: 'application/vnd.github.v3+json',
-          'User-Agent': 'content-generator',
-        },
-      });
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'content-generator',
+      },
+    });
 
     if (!emailsResponse.ok) {
       const emailsErrorText = await emailsResponse.text();

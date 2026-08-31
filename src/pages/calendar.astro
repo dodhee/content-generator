@@ -21,7 +21,7 @@ const userName = '';
 <Layout title="Calendar" showNav={true} workspaceId={workspaceId} userName={userName}>
   <div class="container mx-auto px-4 py-8">
     <CalendarGrid
-      client:load
+      client:only="react"
       workspaceId={workspaceId}
       initialMonth={initialMonth}
       slots={slots}

@@ -9,7 +9,8 @@ export async function onRequest(context: {
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  const validationResult = await validateSession(request, env, env.GITHUB_CLIENT_SECRET);
+  const secret = env.GITHUB_CLIENT_SECRET ?? '';
+  const validationResult = await validateSession(request, env, secret);
 
   if (validationResult instanceof Response) {
     return validationResult;
@@ -37,15 +38,14 @@ export async function onRequest(context: {
         site_name: string;
       }>();
 
-    return new Response(
-      JSON.stringify({ articles: result.results || [] }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ articles: result.results || [] }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Scheduled today error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch scheduled articles' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: 'Failed to fetch scheduled articles' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

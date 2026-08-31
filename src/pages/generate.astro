@@ -1,0 +1,35 @@
+// src/pages/generate.astro
+// Article generation page: Outline Editor → Review → Full Article
+
+---
+import ArticleGenerator from '../components/ArticleGenerator.tsx';
+import OutlineEditor from '../components/OutlineEditor.tsx';
+import Layout from '../layouts/Layout.astro';
+
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
+const workspaceId = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const userName = '';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const articleId = '';
+---
+
+<Layout title="Generate Article" showNav={true} workspaceId={workspaceId} userName={userName}>
+  <div class="container mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">Generate Article</h1>
+      <p class="text-slate-400">Create high-quality content with AI-powered outline and article generation.</p>
+    </header>
+
+    <div id="generate-app" data-article-id={articleId} data-workspace-id={workspaceId}>
+      <!-- OutlineEditor will be mounted here via client:only -->
+      <div class="max-w-4xl mx-auto">
+        <OutlineEditor client:only="solid-js" articleId={articleId} />
+      </div>
+      <!-- ArticleGenerator will be shown after outline is saved -->
+      <div id="article-generator-container" class="max-w-4xl mx-auto mt-8 hidden">
+        <ArticleGenerator client:only="solid-js" articleId={articleId} outline={null} />
+      </div>
+    </div>
+  </div>
+</Layout>

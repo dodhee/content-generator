@@ -53,9 +53,13 @@ export function DashboardStats() {
       {loading() ? (
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} class="bg-slate-800/50 border border-slate-700 rounded-lg p-6 animate-pulse">
-              <div class="h-4 bg-slate-700 rounded w-3/4 mb-2"></div>
-              <div class="h-8 bg-slate-700 rounded w-1/2"></div>
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders, never reorder
+              key={`skeleton-stat-${i}`}
+              class="bg-slate-800/50 border border-slate-700 rounded-lg p-6 animate-pulse"
+            >
+              <div class="h-4 bg-slate-700 rounded w-3/4 mb-2" />
+              <div class="h-8 bg-slate-700 rounded w-1/2" />
             </div>
           ))}
         </div>
@@ -71,9 +75,11 @@ export function DashboardStats() {
               <span class="text-sm text-slate-400">Articles (7d)</span>
               <span class="text-2xl">📝</span>
             </div>
-            <div class="text-3xl font-bold text-white">{stats()!.articles_7d.total}</div>
-            <span class={`text-sm font-medium ${changeClass(stats()!.articles_7d.change_pct)}`}>
-              {stats()!.articles_7d.change_pct}% from last week
+            <div class="text-3xl font-bold text-white">{stats()?.articles_7d.total}</div>
+            <span
+              class={`text-sm font-medium ${changeClass(stats()?.articles_7d.change_pct ?? '0')}`}
+            >
+              {stats()?.articles_7d.change_pct}% from last week
             </span>
           </div>
 
@@ -83,7 +89,7 @@ export function DashboardStats() {
               <span class="text-sm text-slate-400">Scheduled Today</span>
               <span class="text-2xl">📅</span>
             </div>
-            <div class="text-3xl font-bold text-white">{stats()!.scheduled_today}</div>
+            <div class="text-3xl font-bold text-white">{stats()?.scheduled_today}</div>
             <span class="text-sm text-slate-400">ready to publish</span>
           </div>
 
@@ -93,9 +99,11 @@ export function DashboardStats() {
               <span class="text-sm text-slate-400">Failed Publishes</span>
               <span class="text-2xl">⚠️</span>
             </div>
-            <div class="text-3xl font-bold text-white">{stats()!.failed_publishes}</div>
-            <span class={`text-sm font-medium ${stats()!.failed_publishes > 0 ? 'text-red-400' : 'text-slate-400'}`}>
-              {stats()!.failed_publishes > 0 ? 'needs attention' : 'all good'}
+            <div class="text-3xl font-bold text-white">{stats()?.failed_publishes}</div>
+            <span
+              class={`text-sm font-medium ${(stats()?.failed_publishes ?? 0) > 0 ? 'text-red-400' : 'text-slate-400'}`}
+            >
+              {(stats()?.failed_publishes ?? 0) > 0 ? 'needs attention' : 'all good'}
             </span>
           </div>
 
@@ -105,7 +113,9 @@ export function DashboardStats() {
               <span class="text-sm text-slate-400">AI Cost (MTD)</span>
               <span class="text-2xl">💰</span>
             </div>
-            <div class="text-3xl font-bold text-white">{formatCurrency(stats()!.cost_mtd)}</div>
+            <div class="text-3xl font-bold text-white">
+              {formatCurrency(stats()?.cost_mtd ?? 0)}
+            </div>
             <span class="text-sm text-slate-400">this month</span>
           </div>
         </div>

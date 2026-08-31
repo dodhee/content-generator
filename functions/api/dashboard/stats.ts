@@ -9,7 +9,8 @@ export async function onRequest(context: {
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  const validationResult = await validateSession(request, env, env.GITHUB_CLIENT_SECRET);
+  const secret = env.GITHUB_CLIENT_SECRET ?? '';
+  const validationResult = await validateSession(request, env, secret);
 
   if (validationResult instanceof Response) {
     return validationResult;
@@ -65,9 +66,10 @@ export async function onRequest(context: {
     // Calculate trend
     const currentCount = articles7d?.count ?? 0;
     const previousCount = articles30d?.count ?? currentCount * 4.3; // rough estimate
-    const changePct = previousCount > 0
-      ? Math.round(((currentCount - previousCount / 4.3) / (previousCount / 4.3)) * 100)
-      : 0;
+    const changePct =
+      previousCount > 0
+        ? Math.round(((currentCount - previousCount / 4.3) / (previousCount / 4.3)) * 100)
+        : 0;
 
     const stats = {
       articles_7d: {
@@ -84,9 +86,9 @@ export async function onRequest(context: {
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch dashboard stats' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: 'Failed to fetch dashboard stats' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

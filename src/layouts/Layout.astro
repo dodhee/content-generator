@@ -1,13 +1,11 @@
 ---
-interface Props {
-  title?: string;
-  showNav?: boolean;
-  workspaceId?: string;
-  userName?: string;
-}
-
-const { title, showNav = false, workspaceId = '', userName = '' } = Astro.props;
 import '../styles/global.css';
+import Navigation from '../components/Navigation.tsx';
+
+const _title = Astro.props.title || 'AI Content Generator';
+const _showNav = Astro.props.showNav ?? false;
+const _workspaceId = Astro.props.workspaceId || '';
+const _userName = Astro.props.userName || '';
 ---
 
 <!doctype html>
@@ -17,11 +15,11 @@ import '../styles/global.css';
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title || 'AI Auto Content Generator'}</title>
+    <title>{_title}</title>
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-    {showNav && (
-      <Navigation client:load workspaceId={workspaceId} userName={userName} />
+    {_showNav && (
+      <Navigation client:only="solid-js" workspaceId={_workspaceId} userName={_userName} />
     )}
     <main class="pt-16">
       <slot />

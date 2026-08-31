@@ -55,10 +55,7 @@ export function TodaySchedule() {
     <section class="mb-8" aria-label="Today's schedule">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-sm uppercase tracking-widest text-slate-500">Today's Schedule</h2>
-        <a
-          href="/calendar"
-          class="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
-        >
+        <a href="/calendar" class="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
           View All Calendar →
         </a>
       </div>
@@ -66,11 +63,15 @@ export function TodaySchedule() {
       {loading() ? (
         <div class="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} class="bg-slate-800/50 border border-slate-700 rounded-lg p-4 animate-pulse">
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders, never reorder
+              key={`skeleton-${i}`}
+              class="bg-slate-800/50 border border-slate-700 rounded-lg p-4 animate-pulse"
+            >
               <div class="flex items-center gap-4">
-                <div class="w-16 h-4 bg-slate-700 rounded"></div>
-                <div class="flex-1 h-4 bg-slate-700 rounded"></div>
-                <div class="w-12 h-4 bg-slate-700 rounded"></div>
+                <div class="w-16 h-4 bg-slate-700 rounded" />
+                <div class="flex-1 h-4 bg-slate-700 rounded" />
+                <div class="w-12 h-4 bg-slate-700 rounded" />
               </div>
             </div>
           ))}
@@ -88,27 +89,29 @@ export function TodaySchedule() {
         </div>
       ) : (
         <div class="space-y-2">
-          {schedule().slice(0, 10).map((item) => (
-            <div
-              key={item.id}
-              class="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
-            >
-              <span class="text-sm font-mono text-slate-500 w-16 shrink-0">
-                {formatTime(item.scheduled_for)}
-              </span>
-              <div class="flex-1 min-w-0">
-                <span class="text-sm font-medium text-slate-100 truncate block">
-                  {item.title || 'Untitled Article'}
+          {schedule()
+            .slice(0, 10)
+            .map((item) => (
+              <div
+                key={item.id}
+                class="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
+              >
+                <span class="text-sm font-mono text-slate-500 w-16 shrink-0">
+                  {formatTime(item.scheduled_for)}
                 </span>
-                <span class="text-xs text-slate-500 truncate">
-                  {item.site_name}
+                <div class="flex-1 min-w-0">
+                  <span class="text-sm font-medium text-slate-100 truncate block">
+                    {item.title || 'Untitled Article'}
+                  </span>
+                  <span class="text-xs text-slate-500 truncate">{item.site_name}</span>
+                </div>
+                <span
+                  class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor(item.status)}`}
+                >
+                  {item.status}
                 </span>
               </div>
-              <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor(item.status)}`}>
-                {item.status}
-              </span>
-            </div>
-          ))}
+            ))}
 
           {schedule().length > 10 && (
             <div class="text-center pt-2">
