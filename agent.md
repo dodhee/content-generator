@@ -4,7 +4,7 @@
 - **Nama Proyek**: AI Auto Content Generator
 - **Tech Stack**: Astro + React/Preact islands, Cloudflare Pages + Functions, D1, KV, R2, Durable Objects, 9Router/OpenRouter
 - **Tanggal Mulai**: 2026-08-19
-- **Update Terakhir**: 2026-08-28
+- **Update Terakhir**: 2026-08-31
 
 ## Status Fase
 | Fase | Deskripsi | Status | Catatan |
@@ -50,7 +50,7 @@
 
 - 2026-08-28 — Phase numbering consolidation: TASK_LIST_v2.md created with linear 0-17 phases; agent.md updated; old fractional phases (9.1-9.6, 10.1b-10.5b, 5.4b, 11.1-11.3) merged into main phases 4-11; PRD traceability matrix added
 
-- 2026-08-28 — Fase 12 complete: Dashboard Root + Global Navigation deployed (4cb5fff9); Navigation.tsx (SolidJS), DashboardStats.tsx + /api/dashboard/stats, TodaySchedule.tsx + /api/articles/scheduled-today; Layout.astro conditional nav; all auth pages wired; OAuth callback redirect fixed; Astro multi-framework (React + SolidJS) configured
+- 2026-08-31 — Fase 12 lint fix: Layout.astro (unused vars → _prefix), TodaySchedule.tsx (skeleton keys + self-closing), DashboardStats.tsx (skeleton keys + self-closing), Navigation.tsx (button type + SVG title), scheduled-today.ts & stats.ts (secret fallback); build verified, commit 9194837 pushed
 
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi

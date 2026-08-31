@@ -154,9 +154,9 @@
 
 ---
 
-## Fase 12 — Dashboard Root + Global Navigation 🔜 NEXT
+## Fase 12 — Dashboard Root + Global Navigation ✅
 **Scope:** Root dashboard, global nav, OAuth redirect consistency
-**Files:** `src/pages/index.astro`, `src/components/Navigation.tsx`, `src/components/DashboardStats.tsx`, `src/components/TodaySchedule.tsx`, `src/layouts/Layout.astro`, `functions/api/dashboard/stats.ts`, `functions/api/auth/callback.ts`
+**Files:** `src/pages/index.astro`, `src/components/Navigation.tsx`, `src/components/DashboardStats.tsx`, `src/components/TodaySchedule.tsx`, `src/layouts/Layout.astro`, `functions/api/dashboard/stats.ts`, `functions/api/auth/callback.ts`, `functions/api/articles/scheduled-today.ts`
 **Tasks:**
 - 12.1 `index.astro`: hapus `prerender=true`, server-side session check, redirect `/api/auth/login` jika tidak auth
 - 12.2 `DashboardStats.tsx`: 4 stat cards (articles 7d, scheduled today, failed publishes, AI cost MTD) + API `/api/dashboard/stats`
@@ -165,7 +165,8 @@
 - 12.5 Wire Navigation ke Layout: `showNav` prop, apply ke `/`, `/sites`, `/calendar`, `/publish-queue`
 - 12.6 OAuth callback: redirect `/sites` → `/` (root dashboard)
 - 12.7 E2E test: login → dashboard → sites → calendar → queue → logout
-**Acceptance:** Root = functional dashboard, global nav connects all pages, OAuth lands on dashboard
+- 12.8 Lint fix: Layout unused vars, TodaySchedule/DashboardStats skeleton keys, Navigation SVG a11y, API secret fallback
+**Acceptance:** Root = functional dashboard, global nav connects all pages, OAuth lands on dashboard, lint+build clean
 
 ---
 
