@@ -4,7 +4,14 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  integrations: [react(), solidJs()],
+  integrations: [
+    react({
+      include: ['**/*.react.tsx'],
+    }),
+    solidJs({
+      include: ['**/*.solid.tsx'],
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
   },

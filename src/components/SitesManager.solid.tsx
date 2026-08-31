@@ -2,7 +2,7 @@
 // SolidJS component for site management with Style DNA panel
 
 import { createEffect, createSignal, onMount } from 'solid-js';
-import { StyleDNAPanel } from './StyleDNAPanel';
+import { StyleDNAPanel } from './StyleDNAPanel.solid';
 
 interface Site {
   id: string;

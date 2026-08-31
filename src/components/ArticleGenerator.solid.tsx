@@ -2,8 +2,8 @@
 // Review step + Full article generation (streaming per section) + Media Manager integration
 
 import { For, createSignal, onMount } from 'solid-js';
-import { MediaManager } from './MediaManager';
-import type { OutlineData, Section } from './OutlineEditor';
+import { MediaManager } from './MediaManager.solid';
+import type { OutlineData, Section } from './OutlineEditor.solid';
 
 const MODEL_OPTIONS = [
   { value: 'auto', label: 'Auto (recommended)', tier: 'cheap/balanced/premium' },
