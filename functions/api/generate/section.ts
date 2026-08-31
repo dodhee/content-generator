@@ -2,7 +2,7 @@
 // POST /api/generate/section — generate single section content (streaming)
 
 import type { Env } from '../../../src/env';
-import { callRouter } from '../../../src/lib/server/ai/router';
+import { recordUsage, resolveModel } from '../../../src/lib/server/ai/router';
 import { validateSession } from '../../../src/lib/server/auth';
 
 interface SectionGenerateRequest {
@@ -17,6 +17,7 @@ interface SectionGenerateRequest {
     suggested_tags?: string[];
     suggested_categories?: string[];
   };
+  model_override?: string;
 }
 
 export const onRequest = async (context: {
@@ -38,12 +39,12 @@ export const onRequest = async (context: {
 
   try {
     const body: SectionGenerateRequest = await request.json();
-    const { article_id, section_id, heading, level, outline } = body;
+    const { article_id, section_id, heading, level, outline, model_override } = body;
 
     // Verify article belongs to workspace
     const articleRes = await env.DB.prepare('SELECT * FROM articles WHERE id = ?')
       .bind(article_id)
-      .first<{ workspace_id: string; site_id: string }>();
+      .first<{ workspace_id: string; site_id: string; intent: string }>();
 
     if (!articleRes || articleRes.workspace_id !== workspaceId) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
@@ -57,7 +58,7 @@ export const onRequest = async (context: {
       .bind(articleRes.site_id)
       .first<{ ai_model_default: string; wp_style_dna: string | null }>();
 
-    const model = siteRes?.ai_model_default || '9router-claude-writer';
+    const model = resolveModel(model_override, articleRes.intent, siteRes?.ai_model_default);
     const styleDna = siteRes?.wp_style_dna;
 
     // Build section generation prompt
@@ -87,6 +88,7 @@ Write the section content in markdown format. Do NOT include the heading in your
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
+    const start = Date.now();
     const response = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers,
@@ -107,8 +109,35 @@ Write the section content in markdown format. Do NOT include the heading in your
       throw new Error(`9Router error: ${response.status} - ${error}`);
     }
 
+    // Record usage when the stream finishes (tokens unavailable from raw SSE passthrough)
+    const responseBody = response.body;
+    if (!responseBody) throw new Error('Empty stream response');
+    const reader = responseBody.getReader();
+    const stream = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          await recordUsage(env, {
+            workspaceId: articleRes.workspace_id,
+            siteId: articleRes.site_id,
+            articleId: article_id,
+            model,
+            action: 'generate_section',
+            durationMs: Date.now() - start,
+            success: true,
+          });
+          return;
+        }
+        controller.enqueue(value);
+      },
+      cancel() {
+        reader.cancel();
+      },
+    });
+
     // Return streaming response
-    return new Response(response.body, {
+    return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Transfer-Encoding': 'chunked',

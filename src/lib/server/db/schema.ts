@@ -203,6 +203,7 @@ export const usageStats = sqliteTable('usage_stats', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   workspaceId: text('workspace_id').notNull(),
   siteId: text('site_id'),
+  articleId: text('article_id'),
   modelName: text('model_name'),
   action: text('action').notNull(),
   tokensInput: integer('tokens_input'),

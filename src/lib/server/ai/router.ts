@@ -22,6 +22,89 @@ interface RouterResponse {
   usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
 }
 
+// Model tiers (US-05 AC-01): cheap / balanced / premium
+export const MODEL_TIERS = {
+  cheap: 'anthropic/claude-3.5-haiku',
+  balanced: 'anthropic/claude-3.5-sonnet',
+  premium: 'anthropic/claude-4-opus',
+} as const;
+export type ModelTier = keyof typeof MODEL_TIERS;
+
+// Cost per 1M tokens (USD), used for estimated_cost_usd in usage_stats
+const TIER_PRICE: Record<ModelTier, { input: number; output: number }> = {
+  cheap: { input: 0.25, output: 1.25 },
+  balanced: { input: 3, output: 15 },
+  premium: { input: 15, output: 75 },
+};
+
+// Intent → tier auto-routing (US-05 AC-02)
+const INTENT_TIER: Record<string, ModelTier> = {
+  informational: 'cheap', // listicle / how-to
+  commercial: 'balanced', // reviews, comparisons
+  transactional: 'premium', // expert review / technical deep-dive
+};
+
+export function tierForModel(model: string): ModelTier | null {
+  const entry = Object.entries(MODEL_TIERS).find(([, m]) => m === model);
+  return (entry?.[0] as ModelTier) || null;
+}
+
+export function estimateCost(model: string, usage: RouterResponse['usage']): number {
+  if (!usage) return 0;
+  const tier = tierForModel(model);
+  const price = tier ? TIER_PRICE[tier] : { input: 3, output: 15 };
+  return (usage.prompt_tokens * price.input + usage.completion_tokens * price.output) / 1_000_000;
+}
+
+// Resolve model: manual override (tier keyword or literal id) > intent auto-route > site default
+export function resolveModel(
+  override: string | undefined,
+  intent: string | undefined,
+  siteDefault: string | undefined,
+): string {
+  if (override && override !== 'auto') {
+    return MODEL_TIERS[override as ModelTier] ?? override;
+  }
+  const routedTier = intent ? INTENT_TIER[intent] : undefined;
+  if (routedTier) return MODEL_TIERS[routedTier];
+  return siteDefault || MODEL_TIERS.balanced;
+}
+
+// Record cost/token usage into usage_stats (US-05 AC-04)
+export async function recordUsage(
+  env: Env,
+  input: {
+    workspaceId: string;
+    siteId: string;
+    articleId?: string;
+    model: string;
+    action: string;
+    usage?: RouterResponse['usage'];
+    durationMs?: number;
+    success?: boolean;
+  },
+): Promise<void> {
+  const { workspaceId, siteId, articleId, model, action, usage, durationMs, success } = input;
+  const cost = estimateCost(model, usage);
+  await env.DB.prepare(
+    `INSERT INTO usage_stats (workspace_id, site_id, article_id, model_name, action, tokens_input, tokens_output, estimated_cost_usd, duration_ms, success, recorded_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+  )
+    .bind(
+      workspaceId,
+      siteId ?? null,
+      articleId ?? null,
+      model,
+      action,
+      usage?.prompt_tokens ?? 0,
+      usage?.completion_tokens ?? 0,
+      cost,
+      durationMs ?? null,
+      success === false ? 0 : 1,
+    )
+    .run();
+}
+
 async function callNineRouter(env: Env, options: RouterOptions): Promise<RouterResponse> {
   const baseUrl = env.NINE_ROUTER_BASE_URL || 'https://9router.codevx.web.id';
   const apiKey = env.NINE_ROUTER_API_KEY;
@@ -150,7 +233,7 @@ export async function generateOutline(
   // Note: Using direct DB calls to avoid circular imports
   const articleRes = await env.DB.prepare('SELECT * FROM articles WHERE id = ?')
     .bind(articleId)
-    .first<{ site_id: string }>();
+    .first<{ site_id: string; workspace_id: string }>();
   if (!articleRes) throw new Error('Article not found');
 
   const siteRes = await env.DB.prepare('SELECT * FROM sites WHERE id = ?')
@@ -158,7 +241,7 @@ export async function generateOutline(
     .first<{ ai_model_default: string; wp_style_dna: string | null }>();
   if (!siteRes) throw new Error('Site not found');
 
-  const model = request.model_override || siteRes.ai_model_default || '9router-claude-writer';
+  const model = resolveModel(request.model_override, request.intent, siteRes.ai_model_default);
   const styleDna = request.style_dna && siteRes.wp_style_dna ? siteRes.wp_style_dna : undefined;
 
   const { system, user } = buildOutlinePrompt(
@@ -167,6 +250,7 @@ export async function generateOutline(
     styleDna,
   );
 
+  const start = Date.now();
   const response = await callRouter(env, {
     model,
     messages: [
@@ -175,6 +259,16 @@ export async function generateOutline(
     ],
     temperature: 0.5,
     max_tokens: 3000,
+  });
+
+  await recordUsage(env, {
+    workspaceId: articleRes.workspace_id,
+    siteId: articleRes.site_id,
+    articleId,
+    model: response.model,
+    action: 'generate_outline',
+    usage: response.usage,
+    durationMs: Date.now() - start,
   });
 
   // Parse and validate response

@@ -150,8 +150,9 @@ CREATE TABLE usage_stats (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   workspace_id    TEXT NOT NULL,
   site_id         TEXT,
+  article_id      TEXT,
   model_name      TEXT,
-  action          TEXT NOT NULL,  -- 'generate', 'publish', 'image_gen'
+  action          TEXT NOT NULL,  -- 'generate', 'generate_outline', 'generate_section', 'publish', 'image_gen'
   tokens_input    INTEGER,
   tokens_output   INTEGER,
   estimated_cost_usd REAL,

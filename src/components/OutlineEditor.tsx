@@ -26,8 +26,15 @@ interface OutlineEditorProps {
   articleId: string;
   initialOutline?: OutlineData;
   onSave: (outline: OutlineData) => Promise<void>;
-  onGenerateArticle: (outline: OutlineData) => void;
+  onGenerateArticle: (outline: OutlineData, modelOverride?: string) => void;
 }
+
+const MODEL_OPTIONS = [
+  { value: 'auto', label: 'Auto (recommended)', tier: 'cheap/balanced/premium' },
+  { value: 'cheap', label: 'Cheap (Haiku)', tier: 'Fast, low cost' },
+  { value: 'balanced', label: 'Balanced (Sonnet)', tier: 'Best quality/value' },
+  { value: 'premium', label: 'Premium (Opus)', tier: 'Highest quality' },
+] as const;
 
 export function OutlineEditor(props: OutlineEditorProps) {
   const [outline, setOutline] = createSignal<OutlineData>(
@@ -43,6 +50,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [draggedId, setDraggedId] = createSignal<string | null>(null);
+  const [modelTier, setModelTier] = createSignal<string>('auto');
 
   onMount(() => {
     if (props.initialOutline) {
@@ -158,7 +166,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
     setSaving(true);
     setError(null);
     try {
-      await props.onSave(outline());
+      await props.onSave(outline(), modelTier());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save outline');
     } finally {
@@ -167,7 +175,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
   };
 
   const proceedToArticle = () => {
-    props.onGenerateArticle(outline());
+    props.onGenerateArticle(outline(), modelTier());
   };
 
   return (
@@ -514,6 +522,31 @@ export function OutlineEditor(props: OutlineEditorProps) {
             }
           />
         </div>
+      </div>
+
+      {/* Model tier selector */}
+      <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+        <label htmlFor="model-tier" className="block text-sm font-medium text-slate-300 mb-1">
+          Model Tier
+        </label>
+        <select
+          id="model-tier"
+          value={modelTier()}
+          onChange={(e) => setModelTier(e.currentTarget.value)}
+          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+        >
+          <For each={MODEL_OPTIONS}>
+            {(opt) => (
+              <option value={opt.value}>
+                {opt.label} — {opt.tier}
+              </option>
+            )}
+          </For>
+        </select>
+        <p className="mt-1 text-xs text-slate-500">
+          Auto routes by intent: how-to/listicle → cheap, reviews → balanced, technical deep-dive →
+          premium. Applies to outline + article generation.
+        </p>
       </div>
 
       {/* Actions */}

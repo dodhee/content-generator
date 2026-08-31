@@ -5,6 +5,13 @@ import { For, createSignal, onMount } from 'solid-js';
 import { MediaManager } from './MediaManager';
 import type { OutlineData, Section } from './OutlineEditor';
 
+const MODEL_OPTIONS = [
+  { value: 'auto', label: 'Auto (recommended)', tier: 'cheap/balanced/premium' },
+  { value: 'cheap', label: 'Cheap (Haiku)', tier: 'Fast, low cost' },
+  { value: 'balanced', label: 'Balanced (Sonnet)', tier: 'Best quality/value' },
+  { value: 'premium', label: 'Premium (Opus)', tier: 'Highest quality' },
+] as const;
+
 interface SectionContent {
   sectionId: string;
   heading: string;
@@ -40,6 +47,9 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [showMedia, setShowMedia] = createSignal(false);
+  const [modelTier, setModelTier] = createSignal<string>('auto');
+  const [costEstimate, setCostEstimate] = createSignal<string | null>(null);
+  const [showCost, setShowCost] = createSignal(false);
 
   const generateSection = async (index: number) => {
     const section = sections()[index];
@@ -62,6 +72,7 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
           heading: section.heading,
           level: section.level,
           outline: props.outline,
+          model_override: modelTier(),
         }),
       });
 
@@ -184,6 +195,27 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
     }
   });
 
+  const fetchCost = async () => {
+    try {
+      const res = await fetch(
+        `/api/analytics/models?article_id=${encodeURIComponent(props.articleId)}&group=article`,
+        { credentials: 'include' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const row = (data.rows as Array<{ estimated_cost_usd: number }>)[0];
+      setCostEstimate(`$${((row?.estimated_cost_usd ?? 0) / 1).toFixed(4)} total`);
+    } catch {
+      setCostEstimate('Cost unavailable');
+    }
+  };
+
+  const toggleCost = () => {
+    const next = !showCost();
+    setShowCost(next);
+    if (next) void fetchCost();
+  };
+
   const statusColors = {
     pending: 'bg-slate-700/50 text-slate-400',
     generating: 'bg-cyan-500/20 text-cyan-400 animate-pulse',
@@ -203,6 +235,23 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Model tier selector */}
+          <div className="relative">
+            <select
+              value={modelTier()}
+              onChange={(e) => setModelTier(e.currentTarget.value)}
+              className="px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:ring-1 focus:ring-cyan-500"
+              aria-label="Model tier"
+            >
+              <For each={MODEL_OPTIONS}>
+                {(opt) => (
+                  <option value={opt.value}>
+                    {opt.label} — {opt.tier}
+                  </option>
+                )}
+              </For>
+            </select>
+          </div>
           <button
             type="button"
             onClick={() => setShowMedia(!showMedia())}
@@ -416,6 +465,29 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
           {error()}
         </div>
       )}
+
+      {/* Cost display */}
+      <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-slate-300">AI Cost</h3>
+          <button
+            type="button"
+            onClick={toggleCost}
+            className="text-xs text-cyan-400 hover:text-cyan-300"
+          >
+            {showCost() ? 'Hide' : 'Show cost'}
+          </button>
+        </div>
+        {showCost() && (
+          <div className="text-sm">
+            {costEstimate() ? (
+              <span className="text-white font-mono">{costEstimate()}</span>
+            ) : (
+              <span className="text-slate-500">Fetching cost...</span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
