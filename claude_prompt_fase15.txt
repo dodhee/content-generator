@@ -1,0 +1,46 @@
+## TARGET GOAL & CONTEXT
+Implement Fase 15 — Media Management (PRD US-09) for AI Auto Content Generator.
+
+**PRD US-09**: AI image generation, R2 upload, alt text, markdown injection.
+
+**Current State**: 
+- Cloudflare R2 bucket binding needed (not yet configured)
+- ArticleGenerator.tsx exists with contentEditable sections
+- Need to integrate image generation into article generation flow
+
+**Scope per TASK_LIST_v2.md Fase 15**:
+1. `src/lib/server/ai/image.ts` — Core: Pollinations/FLUX image gen, auto alt text, compress WebP max 1200px, upload to R2
+2. `functions/api/media/index.ts` — API: POST /generate (prompt→image), POST /upload (file→R2), GET /list
+3. `src/components/MediaManager.tsx` — UI: Prompt input, generate button, gallery, insert to editor
+
+## FILE BOUNDARIES
+CREATE new files:
+- src/lib/server/ai/image.ts
+- functions/api/media/index.ts
+- src/components/MediaManager.tsx
+
+MODIFY existing:
+- src/components/ArticleGenerator.tsx — add MediaManager integration (toolbar button, insert image)
+
+DO NOT TOUCH:
+- router.ts, style-dna.ts, generate APIs
+- db/schema.ts (R2 binding handled via env)
+
+## SPECIFIC RULES
+- Follow CLAUDE.md: Biome lint, TS strict, no 'any', type-only imports
+- Use Pollinations.ai (free) for image generation: https://pollinations.ai/prompt/{prompt}
+- R2 upload via S3-compatible API (AWS SDK or fetch with sigv4)
+- Compress to WebP, max 1200px width, quality 80%
+- Auto alt text: use prompt + "illustration for article about {topic}"
+- Store in R2: `images/{workspaceId}/{articleId}/{uuid}.webp`
+- Return CDN URL for markdown insertion
+- SolidJS for components
+
+## VERIFICATION & OUTPUT CONTROL
+Run after implementation:
+1. npm run lint  (must pass, no errors)
+2. npm run build (must pass)
+3. Only report: STATUS PASS/FAIL + any error lines
+4. Do NOT output full stdout
+
+Deliver: 3 new files + 1 modified file, all passing lint+build.

@@ -1,7 +1,8 @@
 // src/components/ArticleGenerator.tsx
-// Review step + Full article generation (streaming per section)
+// Review step + Full article generation (streaming per section) + Media Manager integration
 
 import { For, createSignal, onMount } from 'solid-js';
+import { MediaManager } from './MediaManager';
 import type { OutlineData, Section } from './OutlineEditor';
 
 interface SectionContent {
@@ -38,8 +39,7 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
   const [allCompleted, setAllCompleted] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
-
-  // const currentSection = sections()[currentIndex()]; // unused
+  const [showMedia, setShowMedia] = createSignal(false);
 
   const generateSection = async (index: number) => {
     const section = sections()[index];
@@ -135,6 +135,17 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
     );
   };
 
+  const handleInsertImage = (markdown: string) => {
+    setSections((prev) =>
+      prev.map((s, i) =>
+        i === currentIndex()
+          ? { ...s, content: s.content + (s.content ? '\n\n' : '') + markdown }
+          : s,
+      ),
+    );
+    setShowMedia(false);
+  };
+
   const handleSaveArticle = async () => {
     setSaving(true);
     setError(null);
@@ -183,6 +194,40 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
 
   return (
     <div className="space-y-6">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-white">Article Generation</h2>
+          <span className="px-2 py-0.5 bg-slate-700 text-slate-300 text-xs rounded">
+            {props.outline.title}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMedia(!showMedia())}
+            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+              showMedia()
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            🖼️ Media Manager
+          </button>
+        </div>
+      </div>
+
+      {/* Media Manager Panel */}
+      {showMedia() && (
+        <div className="mb-6">
+          <MediaManager
+            articleId={props.articleId}
+            topic={props.outline.title}
+            onInsertImage={handleInsertImage}
+          />
+        </div>
+      )}
+
       {/* Progress Bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-sm mb-2">
