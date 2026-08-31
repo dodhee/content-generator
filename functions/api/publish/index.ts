@@ -69,6 +69,41 @@ export const onRequest = async (context: {
 
       // Blogger publishes synchronously (token refresh + API call)
       const site = await getSiteById(env.DB, siteId);
+
+      // Optional quality gates (enabled per-site via config_json.quality_gates)
+      if (site?.config_json) {
+        const siteCfg = JSON.parse(site.config_json) as Record<string, unknown>;
+        const qg = (siteCfg.quality_gates ?? {}) as Record<string, unknown>;
+        if (qg.enabled === true) {
+          const { runQualityGates } = await import('../../../src/lib/server/quality/index');
+          const content = article.content_md ?? '';
+          const gatesResult = await runQualityGates(article.id, siteId, content, env, {
+            skipPlagiarism: qg.skip_plagiarism === true,
+            skipAiDetection: qg.skip_ai_detection === true,
+            skipReadability: qg.skip_readability === true,
+            skipFactCheck: qg.skip_fact_check === true,
+            skipBrandSafety: qg.skip_brand_safety === true,
+            plagiarismThreshold:
+              typeof qg.plagiarism_threshold === 'number' ? qg.plagiarism_threshold : undefined,
+            readabilityLang: qg.readability_lang === 'id' ? 'id' : 'en',
+            readabilityNiche:
+              typeof qg.readability_niche === 'string' ? qg.readability_niche : undefined,
+          });
+          if (!gatesResult.passed) {
+            return new Response(
+              JSON.stringify({
+                error: 'Quality gates failed',
+                quality: gatesResult,
+              }),
+              {
+                status: 422,
+                headers: { 'Content-Type': 'application/json' },
+              },
+            );
+          }
+        }
+      }
+
       if (site?.type === 'blogger') {
         if (!site.config_json) {
           return new Response(JSON.stringify({ error: 'Invalid Blogger site configuration' }), {
