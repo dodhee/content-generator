@@ -1,10 +1,10 @@
-// functions/api/publish/blogger.ts
-// POST /api/publish/blogger — publish article to Blogger via API v3
-// OAuth2 token refresh automatic; no secret ever returned in response
+// functions/api/publish/astro.ts
+// POST /api/publish/astro — publish article to Astro/Git repo via GitHub App
+// JWT → installation token → commit → workflow dispatch → poll deploy
 
 import { getArticleById } from '../../../src/lib/server/articles';
 import { validateSession } from '../../../src/lib/server/auth';
-import { publishArticle as publishToBlogger } from '../../../src/lib/server/cms/blogger';
+import { publishArticle as publishToAstro } from '../../../src/lib/server/cms/astro';
 import { getSiteById } from '../../../src/lib/server/sites';
 import { publishRequestSchema } from '../../../src/types/publish';
 
@@ -59,8 +59,8 @@ export const onRequest = async (context: {
     // Resolve site
     const siteId = data.site_id || article.site_id;
     const site = await getSiteById(env.DB, siteId);
-    if (!site || site.type !== 'blogger') {
-      return new Response(JSON.stringify({ error: 'Invalid Blogger site configuration' }), {
+    if (!site || site.type !== 'astro') {
+      return new Response(JSON.stringify({ error: 'Invalid Astro site configuration' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -71,19 +71,33 @@ export const onRequest = async (context: {
       string,
       unknown
     >;
-    if (!config.blogger_blog_id || !config.blogger_refresh_token) {
-      return new Response(JSON.stringify({ error: 'Blogger credentials not configured' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    if (!config.github_repo || !config.github_installation_id) {
+      return new Response(
+        JSON.stringify({ error: 'GitHub repo or installation ID not configured' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
     }
 
-    const result = await publishToBlogger(article, {
-      blogger_blog_id: String(config.blogger_blog_id),
-      blogger_refresh_token: String(config.blogger_refresh_token),
-      google_client_id: env.GOOGLE_CLIENT_ID ?? '',
-      google_client_secret: env.GOOGLE_CLIENT_SECRET ?? '',
-    });
+    const result = await publishToAstro(
+      article,
+      {
+        github_repo: String(config.github_repo),
+        github_branch: String(config.github_branch ?? 'main'),
+        github_content_path: String(config.github_content_path ?? 'src/content/posts'),
+        github_installation_id: String(config.github_installation_id),
+        github_workflow_file: config.github_workflow_file
+          ? String(config.github_workflow_file)
+          : undefined,
+        live_url: config.live_url ? String(config.live_url) : undefined,
+      },
+      {
+        GITHUB_APP_ID: env.GITHUB_APP_ID ?? '',
+        GITHUB_APP_PRIVATE_KEY: env.GITHUB_APP_PRIVATE_KEY ?? '',
+      },
+    );
 
     if (!result.success) {
       // Record error on article
@@ -111,7 +125,7 @@ export const onRequest = async (context: {
         success: true,
         article_id: article.id,
         url: result.url,
-        verify: result.verify ?? null,
+        deploy_url: result.deployUrl ?? null,
       }),
       {
         status: 200,

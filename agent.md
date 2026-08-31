@@ -26,6 +26,7 @@
 | 14   | Style DNA (PRD US-04) | ✅ Verified | Crawl WP/GitHub/sitemap, extract patterns, generate few-shot, SitesManager SolidJS migration; lint+build passing |
 | 15   | Media Management (PRD US-09) | ✅ Verified | Pollinations AI image gen, WebP compression, R2 upload, MediaManager UI, ArticleGenerator integration; lint+build passing |
 | 16   | Blogger Publisher (PRD US-11) | ✅ Verified | OAuth2 token refresh, Blogger API v3 create post, labels, schedule, verify (canonical/indexable), sync dispatch; lint+build passing |
+| 17   | Astro/Git Publisher (PRD US-12) | ✅ Verified | GitHub App JWT auth, commit file, trigger Actions, poll deploy, live URL; lint+build passing |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -55,6 +56,7 @@
 - 2026-08-31 — Fase 14 complete: Style DNA (PRD US-04); style-dna.ts (crawl WP/GitHub/sitemap, extract patterns, AI few-shot), style-dna API, StyleDNAPanel, SitesManager SolidJS migration; lint+build verified, commit 9d36b4c pushed
 - 2026-08-31 — Fase 15 complete: Media Management (PRD US-09); image.ts (Pollinations, WebP, R2), media API, MediaManager, ArticleGenerator toolbar; lint+build verified, commit d3065ce pushed
 - 2026-08-31 — Fase 16 complete: Blogger Publisher (PRD US-11); blogger.ts OAuth2 token refresh + Blogger API v3 create post, labels, schedule, verify (canonical/indexable), sync dispatch from publish/index.ts; lint+build verified
+- 2026-08-31 — Fase 17 complete: Astro/Git Publisher (PRD US-12); astro.ts GitHub App JWT auth (RS256, PKCS#1→PKCS#8), Contents API create/update file, Actions workflow dispatch + poll (5min timeout), live URL construction; lint+build verified
 
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi

@@ -218,9 +218,9 @@
 
 ---
 
-## Fase 17 — Astro/Git Publisher (PRD US-12) ⬜ PLANNED
+## Fase 17 — Astro/Git Publisher (PRD US-12) ✅ Verified
 **Scope:** Generate .md/.mdx file, GitHub App commit + push, Actions deploy
-**Files:** `src/lib/server/cms/astro.ts`, `functions/api/publish/astro.ts`
+**Files:** `src/lib/server/cms/astro.ts`, `functions/api/publish/astro.ts`, `functions/api/publish/index.ts`
 **Tasks:**
 - 17.1 Generate `.md/.mdx` dengan frontmatter lengkap ke `src/content/posts/{slug}.md`
 - 17.2 Commit + push via GitHub App (scoped token, no PAT di UI)
@@ -245,7 +245,7 @@
 | Epic 3   | US-09 Media | Fase 15 | ✅ | |
 | Epic 4   | US-10 WP Publish | Fase 9 | ✅ | |
 | Epic 4   | US-11 Blogger Publish | Fase 16 | ✅ | Completed 2026-08-31 |
-| Epic 4   | US-12 Astro/Git Publish | Fase 17 | ⬜ | |
+| Epic 4   | US-12 Astro/Git Publish | Fase 17 | ✅ | Completed 2026-08-31 |
 | Epic 4   | US-13 Drift Detection | Fase 10.5 | ✅ | |
 
 ---

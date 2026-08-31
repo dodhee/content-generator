@@ -4,6 +4,7 @@
 
 import { getArticleById } from '../../../src/lib/server/articles';
 import { validateSession } from '../../../src/lib/server/auth';
+import { publishArticle as publishToAstro } from '../../../src/lib/server/cms/astro';
 import { publishArticle as publishToBlogger } from '../../../src/lib/server/cms/blogger';
 import { getSiteById } from '../../../src/lib/server/sites';
 import { type PublishRequest, publishRequestSchema } from '../../../src/types/publish';
@@ -109,6 +110,77 @@ export const onRequest = async (context: {
             article_id: article.id,
             url: result.url,
             verify: result.verify ?? null,
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      // Astro/Git publishes synchronously (commit + deploy + poll)
+      if (site?.type === 'astro') {
+        if (!site.config_json) {
+          return new Response(JSON.stringify({ error: 'Invalid Astro site configuration' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        const config = JSON.parse(site.config_json) as Record<string, unknown>;
+
+        if (!config.github_repo || !config.github_installation_id) {
+          return new Response(
+            JSON.stringify({ error: 'GitHub repo or installation ID not configured' }),
+            {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          );
+        }
+
+        const result = await publishToAstro(
+          article,
+          {
+            github_repo: String(config.github_repo),
+            github_branch: String(config.github_branch ?? 'main'),
+            github_content_path: String(config.github_content_path ?? 'src/content/posts'),
+            github_installation_id: String(config.github_installation_id),
+            github_workflow_file: config.github_workflow_file
+              ? String(config.github_workflow_file)
+              : undefined,
+            live_url: config.live_url ? String(config.live_url) : undefined,
+          },
+          {
+            GITHUB_APP_ID: env.GITHUB_APP_ID ?? '',
+            GITHUB_APP_PRIVATE_KEY: env.GITHUB_APP_PRIVATE_KEY ?? '',
+          },
+        );
+
+        if (!result.success) {
+          await env.DB.prepare(
+            `UPDATE articles SET status = 'failed', publish_error = ?, updated_at = datetime('now') WHERE id = ?`,
+          )
+            .bind(result.error ?? 'Unknown error', article.id)
+            .run();
+
+          return new Response(JSON.stringify({ success: false, error: result.error }), {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        await env.DB.prepare(
+          `UPDATE articles SET status = 'published', published_url = ?, published_at = datetime('now'), publish_error = NULL, updated_at = datetime('now') WHERE id = ?`,
+        )
+          .bind(result.url ?? null, article.id)
+          .run();
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            article_id: article.id,
+            url: result.url,
+            deploy_url: result.deployUrl ?? null,
           }),
           {
             status: 200,
