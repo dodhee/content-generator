@@ -24,6 +24,8 @@
 | 12   | Dashboard Root + Global Navigation | ✅ Verified | Root dashboard + nav bar + OAuth redirect consistency; deploy 4cb5fff9 live apps.codevx.web.id |
 | 13   | Article Generation UI (PRD US-03) | ✅ Verified | OutlineEditor + ArticleGenerator + APIs (outline, section, article) + calendar navigation; lint+build passing |
 | 14   | Style DNA (PRD US-04) | ✅ Verified | Crawl WP/GitHub/sitemap, extract patterns, generate few-shot, SitesManager SolidJS migration; lint+build passing |
+| 15   | Media Management (PRD US-09) | ✅ Verified | Pollinations AI image gen, WebP compression, R2 upload, MediaManager UI, ArticleGenerator integration; lint+build passing |
+| 16   | Blogger Publisher (PRD US-11) | ✅ Verified | OAuth2 token refresh, Blogger API v3 create post, labels, schedule, verify (canonical/indexable), sync dispatch; lint+build passing |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -51,6 +53,8 @@
 - 2026-08-31 — Fase 12 lint fix: Layout.astro (unused vars → _prefix), TodaySchedule.tsx (skeleton keys + self-closing), DashboardStats.tsx (skeleton keys + self-closing), Navigation.tsx (button type + SVG title), scheduled-today.ts & stats.ts (secret fallback); build verified, commit 9194837 pushed
 - 2026-08-31 — Fase 13 complete: Article Generation UI (PRD US-03); outline.ts/article.ts APIs, OutlineEditor/ArticleGenerator components fixed (className, For, type imports), generate.astro wired, calendar→generate navigation; lint+build verified, commit 25df0e0 pushed
 - 2026-08-31 — Fase 14 complete: Style DNA (PRD US-04); style-dna.ts (crawl WP/GitHub/sitemap, extract patterns, AI few-shot), style-dna API, StyleDNAPanel, SitesManager SolidJS migration; lint+build verified, commit 9d36b4c pushed
+- 2026-08-31 — Fase 15 complete: Media Management (PRD US-09); image.ts (Pollinations, WebP, R2), media API, MediaManager, ArticleGenerator toolbar; lint+build verified, commit d3065ce pushed
+- 2026-08-31 — Fase 16 complete: Blogger Publisher (PRD US-11); blogger.ts OAuth2 token refresh + Blogger API v3 create post, labels, schedule, verify (canonical/indexable), sync dispatch from publish/index.ts; lint+build verified
 
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi

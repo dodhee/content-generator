@@ -11,6 +11,8 @@ export const siteConfigSchema = z.object({
   wp_app_password: z.string().optional(),
   blogger_blog_id: z.string().optional(),
   blogger_refresh_token: z.string().optional(),
+  google_client_id: z.string().optional(),
+  google_client_secret: z.string().optional(),
   github_repo: z.string().optional(),
   github_branch: z.string().optional(),
   github_installation_id: z.string().optional(),
@@ -48,6 +50,7 @@ function maskSecrets(config: Record<string, unknown>): Record<string, unknown> {
     'blogger_refresh_token',
     'webhook_secret',
     'github_installation_id',
+    'google_client_secret',
   ];
   for (const key of secretKeys) {
     if (masked[key]) {

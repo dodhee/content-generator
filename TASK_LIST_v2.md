@@ -195,7 +195,7 @@
 
 ---
 
-## Fase 15 — Media Management (PRD US-09) ⬜ PLANNED
+## Fase 15 — Media Management (PRD US-09) ✅ Verified
 **Scope:** AI image gen, R2 upload, alt text, markdown injection
 **Files:** `src/lib/server/ai/image.ts`, `functions/api/media/index.ts`, `src/components/MediaManager.tsx`
 **Tasks:**
@@ -206,14 +206,14 @@
 
 ---
 
-## Fase 16 — Blogger Publisher (PRD US-11) ⬜ PLANNED
+## Fase 16 — Blogger Publisher (PRD US-11) ✅ Verified
 **Scope:** Blogger API v3 publish, OAuth2 token refresh
-**Files:** `src/lib/server/cms/blogger.ts`, `functions/api/publish/blogger.ts`
+**Files:** `src/lib/server/cms/blogger.ts`, `functions/api/publish/blogger.ts`, `functions/api/publish/index.ts`
 **Tasks:**
 - 16.1 OAuth2 token refresh otomatis
 - 16.2 Create/update post via Blogger API v3: labels, schedule
 - 16.3 Image upload via Blogger media API (atau R2 + inject URL)
-- 16.4 Post-publish verify (status 200, canonical, indexable)
+- 16.4 Post-publish verify sama WP
 **Acceptance:** Publish to Blogger works same reliability as WP
 
 ---
@@ -236,15 +236,15 @@
 |----------|-----------|---------------------|--------|-------|
 | Epic 1   | US-01 Workspace | Fase 4 | ✅ | |
 | Epic 1   | US-02 Site Connect | Fase 5 | ✅ | |
-|| Epic 2   | US-03 Generate Article | Fase 13 | ✅ | Completed 2026-08-31 |
-|| Epic 2   | US-04 Style DNA | Fase 14 | ✅ | Completed 2026-08-31 |
+| Epic 2   | US-03 Generate Article | Fase 13 | ✅ | Completed 2026-08-31 |
+| Epic 2   | US-04 Style DNA | Fase 14 | ✅ | Completed 2026-08-31 |
 | Epic 2   | US-05 Multi-model Routing | Fase 8 (partial) | ⚠️ Partial | Router exists, routing logic needs UI |
 | Epic 2   | US-06 Opportunity Radar | — | ⬜ | Not started |
 | Epic 3   | US-07 Calendar | Fase 7 | ✅ | |
 | Epic 3   | US-08 Version History | Fase 6 | ✅ | |
-| Epic 3   | US-09 Media | Fase 15 | ⬜ | |
+| Epic 3   | US-09 Media | Fase 15 | ✅ | |
 | Epic 4   | US-10 WP Publish | Fase 9 | ✅ | |
-| Epic 4   | US-11 Blogger Publish | Fase 16 | ⬜ | |
+| Epic 4   | US-11 Blogger Publish | Fase 16 | ✅ | Completed 2026-08-31 |
 | Epic 4   | US-12 Astro/Git Publish | Fase 17 | ⬜ | |
 | Epic 4   | US-13 Drift Detection | Fase 10.5 | ✅ | |
 

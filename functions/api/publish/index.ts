@@ -1,9 +1,11 @@
 // functions/api/publish/index.ts
-// POST /api/publish — enqueue publish job
+// POST /api/publish — enqueue publish job (or dispatch direct for Blogger)
 // GET /api/publish/queue — list publish queue items
 
 import { getArticleById } from '../../../src/lib/server/articles';
 import { validateSession } from '../../../src/lib/server/auth';
+import { publishArticle as publishToBlogger } from '../../../src/lib/server/cms/blogger';
+import { getSiteById } from '../../../src/lib/server/sites';
 import { type PublishRequest, publishRequestSchema } from '../../../src/types/publish';
 
 export const onRequest = async (context: {
@@ -62,6 +64,57 @@ export const onRequest = async (context: {
           status: 202,
           headers: { 'Content-Type': 'application/json' },
         });
+      }
+
+      // Blogger publishes synchronously (token refresh + API call)
+      const site = await getSiteById(env.DB, siteId);
+      if (site?.type === 'blogger') {
+        if (!site.config_json) {
+          return new Response(JSON.stringify({ error: 'Invalid Blogger site configuration' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        const config = JSON.parse(site.config_json) as Record<string, unknown>;
+
+        const result = await publishToBlogger(article, {
+          blogger_blog_id: String(config.blogger_blog_id ?? ''),
+          blogger_refresh_token: String(config.blogger_refresh_token ?? ''),
+          google_client_id: env.GOOGLE_CLIENT_ID ?? '',
+          google_client_secret: env.GOOGLE_CLIENT_SECRET ?? '',
+        });
+
+        if (!result.success) {
+          await env.DB.prepare(
+            `UPDATE articles SET status = 'failed', publish_error = ?, updated_at = datetime('now') WHERE id = ?`,
+          )
+            .bind(result.error ?? 'Unknown error', article.id)
+            .run();
+
+          return new Response(JSON.stringify({ success: false, error: result.error }), {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        await env.DB.prepare(
+          `UPDATE articles SET status = 'published', published_url = ?, published_at = datetime('now'), publish_error = NULL, updated_at = datetime('now') WHERE id = ?`,
+        )
+          .bind(result.url ?? null, article.id)
+          .run();
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            article_id: article.id,
+            url: result.url,
+            verify: result.verify ?? null,
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
       }
 
       // Create publish queue entry

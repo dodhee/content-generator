@@ -18,4 +18,7 @@ export interface Env {
   // OAuth (set via Pages Dashboard → Settings → Secrets)
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
+  // Google OAuth2 (Blogger) — set via Pages Dashboard → Settings → Secrets
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
 }
