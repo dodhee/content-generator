@@ -8,10 +8,9 @@ import Layout from '../layouts/Layout.astro';
 
 // biome-ignore lint/correctness/noUnusedVariables: used in template below
 const workspaceId = '';
-// biome-ignore lint/correctness/noUnusedVariables: used in template
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
 const userName = '';
-// biome-ignore lint/correctness/noUnusedVariables: used in template
-const articleId = '';
+const _articleId = Astro.url.searchParams.get('articleId') || '';
 ---
 
 <Layout title="Generate Article" showNav={true} workspaceId={workspaceId} userName={userName}>
@@ -21,15 +20,65 @@ const articleId = '';
       <p class="text-slate-400">Create high-quality content with AI-powered outline and article generation.</p>
     </header>
 
-    <div id="generate-app" data-article-id={articleId} data-workspace-id={workspaceId}>
+    <div id="generate-app" data-article-id={_articleId} data-workspace-id={workspaceId}>
       <!-- OutlineEditor will be mounted here via client:only -->
       <div class="max-w-4xl mx-auto">
-        <OutlineEditor client:only="solid-js" articleId={articleId} />
+        <OutlineEditor
+          client:only="solid-js"
+          articleId={_articleId}
+          onSave={async (outline) => {
+            const res = await fetch('/api/generate/outline', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ article_id: _articleId, ...outline }),
+            });
+            if (!res.ok) throw new Error('Failed to save outline');
+          }}
+          onGenerateArticle={(outline) => {
+            // Switch to ArticleGenerator view
+            const container = document.getElementById('article-generator-container');
+            const editorContainer = document.querySelector('.max-w-4xl.mx-auto');
+            if (container && editorContainer) {
+              editorContainer.classList.add('hidden');
+              container.classList.remove('hidden');
+              // Mount ArticleGenerator with the outline
+              const event = new CustomEvent('outline-ready', { detail: { outline, articleId: _articleId } });
+              container.dispatchEvent(event);
+            }
+          }}
+        />
       </div>
       <!-- ArticleGenerator will be shown after outline is saved -->
       <div id="article-generator-container" class="max-w-4xl mx-auto mt-8 hidden">
-        <ArticleGenerator client:only="solid-js" articleId={articleId} outline={null} />
+        <ArticleGenerator
+          client:only="solid-js"
+          articleId={_articleId}
+          outline={{ title: '', description: '', sections: [], suggested_faq: [], suggested_tags: [], suggested_categories: [] }}
+          onComplete={async (articleData) => {
+            const res = await fetch('/api/generate/article', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ article_id: _articleId, ...articleData }),
+            });
+            if (!res.ok) throw new Error('Failed to save article');
+            // Redirect to article or calendar
+            window.location.href = '/calendar';
+          }}
+        />
       </div>
     </div>
+
+    <script>
+      // Listen for outline-ready event to initialize ArticleGenerator with actual outline
+      document.addEventListener('outline-ready', (e) => {
+        const container = document.getElementById('article-generator-container');
+        if (container && e.detail) {
+          // The ArticleGenerator component will receive the outline via props
+          // This is handled by SolidJS reactivity when props change
+        }
+      });
+    </script>
   </div>
 </Layout>

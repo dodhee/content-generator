@@ -39,7 +39,7 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const currentSection = sections()[currentIndex()];
+  // const currentSection = sections()[currentIndex()]; // unused
 
   const generateSection = async (index: number) => {
     const section = sections()[index];
@@ -182,19 +182,19 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
   };
 
   return (
-    <div class="space-y-6">
+    <div className="space-y-6">
       {/* Progress Bar */}
-      <div class="mb-6">
-        <div class="flex items-center justify-between text-sm mb-2">
-          <span class="text-slate-300">Article Generation Progress</span>
-          <span class="font-mono text-cyan-400">
+      <div className="mb-6">
+        <div className="flex items-center justify-between text-sm mb-2">
+          <span className="text-slate-300">Article Generation Progress</span>
+          <span className="font-mono text-cyan-400">
             {sections().filter((s) => s.status === 'accepted' || s.status === 'completed').length} /{' '}
             {sections().length} sections
           </span>
         </div>
-        <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
           <div
-            class="h-full bg-cyan-500 transition-all duration-300"
+            className="h-full bg-cyan-500 transition-all duration-300"
             style={{
               width: `${(sections().filter((s) => s.status === 'accepted' || s.status === 'completed').length / sections().length) * 100}%`,
             }}
@@ -203,21 +203,21 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
       </div>
 
       {/* Section Cards */}
-      <div class="space-y-4">
+      <div className="space-y-4">
         <For each={sections()}>
           {(section, index) => (
             <div
-              class={`bg-slate-800/50 border rounded-lg p-4 transition-colors ${
+              className={`bg-slate-800/50 border rounded-lg p-4 transition-colors ${
                 index === currentIndex() && section.status !== 'accepted'
                   ? 'border-cyan-500/50 ring-1 ring-cyan-500/20'
                   : 'border-slate-700'
               }`}
             >
-              <div class="flex items-start justify-between gap-4 mb-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-3 mb-2">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
                     <span
-                      class={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[section.status]}`}
+                      className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[section.status]}`}
                     >
                       {section.status === 'pending'
                         ? '⏳ Pending'
@@ -229,43 +229,49 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
                               ? '✓ Accepted'
                               : '✗ Rejected'}
                     </span>
-                    <span class="text-sm text-slate-500 font-mono">
+                    <span className="text-sm text-slate-500 font-mono">
                       Section {index + 1} / {sections().length}
                     </span>
                   </div>
-                  <h3 class="text-lg font-semibold text-white">{section.heading}</h3>
+                  <h3 className="text-lg font-semibold text-white">{section.heading}</h3>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {section.status === 'completed' && (
                     <>
                       <button
                         type="button"
                         onClick={() => acceptSection(index)}
-                        class="px-3 py-1.5 text-sm bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-lg hover:bg-emerald-500/30 transition-colors"
+                        className="px-3 py-1.5 text-sm bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-lg hover:bg-emerald-500/30 transition-colors"
                       >
                         Accept
                       </button>
                       <button
                         type="button"
                         onClick={() => regenerateSection(index)}
-                        class="px-3 py-1.5 text-sm bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors"
+                        className="px-3 py-1.5 text-sm bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors"
                       >
                         Regenerate
                       </button>
                       <button
                         type="button"
                         onClick={() => rejectSection(index)}
-                        class="px-3 py-1.5 text-sm bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-colors"
+                        className="px-3 py-1.5 text-sm bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-colors"
                       >
                         Reject
                       </button>
                     </>
                   )}
                   {section.status === 'generating' && (
-                    <span class="text-sm text-cyan-400 flex items-center gap-1">
-                      <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <span className="text-sm text-cyan-400 flex items-center gap-1">
+                      <svg
+                        className="animate-spin w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        aria-label="Generating"
+                      >
+                        <title>Generating</title>
                         <circle
-                          class="opacity-25"
+                          className="opacity-25"
                           cx="12"
                           cy="12"
                           r="10"
@@ -273,7 +279,7 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
                           strokeWidth="4"
                         />
                         <path
-                          class="opacity-75"
+                          className="opacity-75"
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                         />
@@ -282,21 +288,21 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
                     </span>
                   )}
                   {section.status === 'accepted' && (
-                    <span class="text-sm text-emerald-400">✓ Accepted</span>
+                    <span className="text-sm text-emerald-400">✓ Accepted</span>
                   )}
                   {section.status === 'rejected' && (
-                    <span class="text-sm text-red-400">✗ Rejected</span>
+                    <span className="text-sm text-red-400">✗ Rejected</span>
                   )}
                 </div>
               </div>
 
               {/* Content Display/Edit */}
-              <div class="prose prose-invert max-w-none">
+              <div className="prose prose-invert max-w-none">
                 {section.status === 'generating' ||
                 section.status === 'completed' ||
                 section.status === 'accepted' ? (
                   <div
-                    class="whitespace-pre-wrap text-slate-100 leading-relaxed min-h-[100px]"
+                    className="whitespace-pre-wrap text-slate-100 leading-relaxed min-h-[100px]"
                     contentEditable={section.status === 'accepted'}
                     onInput={(e) =>
                       setSections((prev) =>
@@ -310,14 +316,14 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
                       (section.status === 'generating' ? 'Generating content...' : '')}
                   </div>
                 ) : (
-                  <div class="text-slate-500 italic">
+                  <div className="text-slate-500 italic">
                     {section.error ? `Error: ${section.error}` : 'Waiting for generation...'}
                   </div>
                 )}
               </div>
 
               {section.error && section.status === 'rejected' && (
-                <div class="mt-3 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-300">
+                <div className="mt-3 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-300">
                   {section.error}
                 </div>
               )}
@@ -327,12 +333,12 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
       </div>
 
       {/* Navigation */}
-      <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-800">
         <button
           type="button"
           onClick={() => setCurrentIndex(Math.max(0, currentIndex() - 1))}
           disabled={currentIndex() === 0}
-          class="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← Previous
         </button>
@@ -342,26 +348,28 @@ export function ArticleGenerator(props: ArticleGeneratorProps) {
             type="button"
             onClick={handleSaveArticle}
             disabled={saving()}
-            class="px-6 py-2.5 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2.5 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving() ? 'Saving Article...' : 'Save Article'}
           </button>
         ) : (
-          <span class="text-slate-500 text-sm">Complete all sections to save</span>
+          <span className="text-slate-500 text-sm">Complete all sections to save</span>
         )}
 
         <button
           type="button"
           onClick={() => setCurrentIndex(Math.min(sections().length - 1, currentIndex() + 1))}
           disabled={currentIndex() >= sections().length - 1}
-          class="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Next →
         </button>
       </div>
 
       {error() && (
-        <div class="p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-300">{error()}</div>
+        <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-300">
+          {error()}
+        </div>
       )}
     </div>
   );

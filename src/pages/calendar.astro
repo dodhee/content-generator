@@ -26,7 +26,11 @@ const userName = '';
       initialMonth={initialMonth}
       slots={slots}
       articles={articles}
-      onSlotClick={() => {}}
+      onSlotClick={(slot, date) => {
+        if (slot.slot_type === 'generation' && slot.article_id) {
+          window.location.href = `/generate?articleId=${slot.article_id}`;
+        }
+      }}
       onArticleDrop={async () => {}}
       onSlotCreate={() => {}}
     />

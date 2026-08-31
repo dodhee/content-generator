@@ -122,11 +122,13 @@ export function OutlineEditor(props: OutlineEditorProps) {
   const handleDragStart = (e: DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer?.setData('text/plain', id);
+    // biome-ignore lint/style/noNonNullAssertion: dataTransfer is set above
     e.dataTransfer!.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
+    // biome-ignore lint/style/noNonNullAssertion: dataTransfer exists during drag
     e.dataTransfer!.dropEffect = 'move';
   };
 
@@ -169,25 +171,32 @@ export function OutlineEditor(props: OutlineEditorProps) {
   };
 
   return (
-    <div class="space-y-6">
+    <div className="space-y-6">
       {/* Title & Description */}
-      <div class="space-y-4">
+      <div className="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Article Title</label>
+          <label htmlFor="article-title" className="block text-sm font-medium text-slate-300 mb-1">
+            Article Title
+          </label>
           <input
+            id="article-title"
             type="text"
-            class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="Enter article title"
             value={outline().title}
             onInput={(e) => updateSection('meta', { title: e.currentTarget.value })}
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">
+          <label
+            htmlFor="article-description"
+            className="block text-sm font-medium text-slate-300 mb-1"
+          >
             Description (optional)
           </label>
           <textarea
-            class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            id="article-description"
+            className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="Brief description for meta/social"
             rows={2}
             value={outline().description || ''}
@@ -197,23 +206,23 @@ export function OutlineEditor(props: OutlineEditorProps) {
       </div>
 
       {/* Sections List */}
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-100">Sections</h3>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-100">Sections</h3>
           <button
             type="button"
             onClick={() => addSection()}
-            class="px-3 py-1.5 text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 rounded-lg hover:bg-cyan-500/30 transition-colors"
+            className="px-3 py-1.5 text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 rounded-lg hover:bg-cyan-500/30 transition-colors"
           >
             + Add Section
           </button>
         </div>
 
-        <div class="space-y-3">
+        <div className="space-y-3">
           <For each={outline().sections}>
             {(section, index) => (
               <div
-                class={`bg-slate-800/50 border rounded-lg p-4 transition-colors ${
+                className={`bg-slate-800/50 border rounded-lg p-4 transition-colors ${
                   draggedId() === section.id
                     ? 'border-cyan-500/50 bg-cyan-500/5'
                     : 'border-slate-700'
@@ -224,14 +233,21 @@ export function OutlineEditor(props: OutlineEditorProps) {
                 onDrop={(e) => handleDrop(e, section.id)}
                 onDragEnd={handleDragEnd}
               >
-                <div class="flex items-start gap-4">
+                <div className="flex items-start gap-4">
                   {/* Drag Handle */}
                   <button
                     type="button"
-                    class="text-slate-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing p-1"
+                    className="text-slate-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing p-1"
                     aria-label="Drag to reorder"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-label="Drag handle"
+                    >
+                      <title>Drag handle</title>
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -242,11 +258,11 @@ export function OutlineEditor(props: OutlineEditorProps) {
                   </button>
 
                   {/* Section Content */}
-                  <div class="flex-1 space-y-3 min-w-0">
+                  <div className="flex-1 space-y-3 min-w-0">
                     {/* Section Header */}
-                    <div class="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                       <select
-                        class="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:ring-1 focus:ring-cyan-500"
+                        className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:ring-1 focus:ring-cyan-500"
                         value={section.level}
                         onChange={(e) =>
                           updateSection(section.id, {
@@ -259,7 +275,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
                       </select>
                       <input
                         type="text"
-                        class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                         placeholder={`Section ${index + 1} heading`}
                         value={section.heading}
                         onInput={(e) =>
@@ -268,7 +284,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
                       />
                       <input
                         type="number"
-                        class="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:ring-1 focus:ring-cyan-500"
+                        className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:ring-1 focus:ring-cyan-500"
                         min="50"
                         max="2000"
                         step="50"
@@ -277,14 +293,21 @@ export function OutlineEditor(props: OutlineEditorProps) {
                           updateSection(section.id, { target_words: Number(e.currentTarget.value) })
                         }
                       />
-                      <span class="text-slate-500 text-sm">words</span>
+                      <span className="text-slate-500 text-sm">words</span>
                       <button
                         type="button"
                         onClick={() => removeSection(section.id)}
-                        class="text-slate-500 hover:text-red-400 p-1"
+                        className="text-slate-500 hover:text-red-400 p-1"
                         aria-label="Remove section"
                       >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-label="Remove section"
+                        >
+                          <title>Remove section</title>
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -296,13 +319,13 @@ export function OutlineEditor(props: OutlineEditorProps) {
                     </div>
 
                     {/* Key Points */}
-                    <div class="space-y-2 ml-6 pl-3 border-l border-slate-700">
+                    <div className="space-y-2 ml-6 pl-3 border-l border-slate-700">
                       <For each={section.key_points}>
                         {(point, pointIdx) => (
-                          <div class="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <input
                               type="text"
-                              class="flex-1 px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-cyan-500"
+                              className="flex-1 px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-cyan-500"
                               placeholder={`Key point ${pointIdx + 1}`}
                               value={point}
                               onInput={(e) =>
@@ -312,15 +335,17 @@ export function OutlineEditor(props: OutlineEditorProps) {
                             <button
                               type="button"
                               onClick={() => removeKeyPoint(section.id, pointIdx)}
-                              class="text-slate-500 hover:text-red-400 p-0.5"
+                              className="text-slate-500 hover:text-red-400 p-0.5"
                               aria-label="Remove key point"
                             >
                               <svg
-                                class="w-4 h-4"
+                                className="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                aria-label="Remove key point"
                               >
+                                <title>Remove key point</title>
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
@@ -335,9 +360,16 @@ export function OutlineEditor(props: OutlineEditorProps) {
                       <button
                         type="button"
                         onClick={() => addKeyPoint(section.id)}
-                        class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                        className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                       >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-label="Add key point"
+                        >
+                          <title>Add key point</title>
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -355,7 +387,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
           </For>
 
           {outline().sections.length === 0 && (
-            <div class="text-center py-8 text-slate-500 border-2 border-dashed border-slate-700 rounded-lg">
+            <div className="text-center py-8 text-slate-500 border-2 border-dashed border-slate-700 rounded-lg">
               <p>No sections yet. Click "Add Section" to start building your outline.</p>
             </div>
           )}
@@ -363,15 +395,15 @@ export function OutlineEditor(props: OutlineEditorProps) {
       </div>
 
       {/* Suggested FAQ */}
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-slate-100">Suggested FAQ (optional)</h3>
-        <div class="space-y-2">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-100">Suggested FAQ (optional)</h3>
+        <div className="space-y-2">
           <For each={outline().suggested_faq || []}>
             {(faq, idx) => (
-              <div class="flex gap-2">
+              <div className="flex gap-2">
                 <input
                   type="text"
-                  class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
+                  className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
                   placeholder="Question"
                   value={faq.question}
                   onInput={(e) => {
@@ -382,7 +414,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
                 />
                 <input
                   type="text"
-                  class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
+                  className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
                   placeholder="Answer"
                   value={faq.answer}
                   onInput={(e) => {
@@ -398,9 +430,17 @@ export function OutlineEditor(props: OutlineEditorProps) {
                     faqs.splice(idx, 1);
                     setOutline((prev) => ({ ...prev, suggested_faq: faqs }));
                   }}
-                  class="text-slate-500 hover:text-red-400 p-2"
+                  className="text-slate-500 hover:text-red-400 p-2"
+                  aria-label="Remove FAQ"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-label="Remove FAQ"
+                  >
+                    <title>Remove FAQ</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -420,7 +460,7 @@ export function OutlineEditor(props: OutlineEditorProps) {
                 suggested_faq: [...(prev.suggested_faq || []), { question: '', answer: '' }],
               }));
             }}
-            class="text-sm text-cyan-400 hover:text-cyan-300"
+            className="text-sm text-cyan-400 hover:text-cyan-300"
           >
             + Add FAQ
           </button>
@@ -428,14 +468,15 @@ export function OutlineEditor(props: OutlineEditorProps) {
       </div>
 
       {/* Tags & Categories */}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">
+          <label htmlFor="tags-input" className="block text-sm font-medium text-slate-300 mb-1">
             Tags (comma-separated)
           </label>
           <input
+            id="tags-input"
             type="text"
-            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
+            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
             placeholder="tag1, tag2, tag3"
             value={outline().suggested_tags?.join(', ') || ''}
             onInput={(e) =>
@@ -450,12 +491,16 @@ export function OutlineEditor(props: OutlineEditorProps) {
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">
+          <label
+            htmlFor="categories-input"
+            className="block text-sm font-medium text-slate-300 mb-1"
+          >
             Categories (comma-separated)
           </label>
           <input
+            id="categories-input"
             type="text"
-            class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
+            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500"
             placeholder="cat1, cat2, cat3"
             value={outline().suggested_categories?.join(', ') || ''}
             onInput={(e) =>
@@ -472,23 +517,23 @@ export function OutlineEditor(props: OutlineEditorProps) {
       </div>
 
       {/* Actions */}
-      <div class="flex flex-wrap gap-3 pt-4 border-t border-slate-800">
+      <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-800">
         <button
           type="button"
           onClick={saveOutline}
           disabled={saving()}
-          class="px-6 py-2.5 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2.5 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {saving() ? 'Saving...' : 'Save Outline'}
         </button>
         <button
           type="button"
           onClick={proceedToArticle}
-          class="px-6 py-2.5 bg-slate-700 text-white font-medium border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors"
+          className="px-6 py-2.5 bg-slate-700 text-white font-medium border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors"
         >
           Continue to Article Generation →
         </button>
-        {error() && <span class="text-red-400 text-sm self-center">{error()}</span>}
+        {error() && <span className="text-red-400 text-sm self-center">{error()}</span>}
       </div>
     </div>
   );
