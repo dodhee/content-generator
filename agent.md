@@ -23,6 +23,7 @@
 | 11   | Audit Log & Monitoring | ✅ Verified | logAudit fail-open, list filter action/since/limit max 200; wired articles |
 | 12   | Dashboard Root + Global Navigation | ✅ Verified | Root dashboard + nav bar + OAuth redirect consistency; deploy 4cb5fff9 live apps.codevx.web.id |
 | 13   | Article Generation UI (PRD US-03) | ✅ Verified | OutlineEditor + ArticleGenerator + APIs (outline, section, article) + calendar navigation; lint+build passing |
+| 14   | Style DNA (PRD US-04) | ✅ Verified | Crawl WP/GitHub/sitemap, extract patterns, generate few-shot, SitesManager SolidJS migration; lint+build passing |
 
 ## Keputusan Arsitektur
 - 2026-08-19 — Astro (SSG + Islands) chosen over Next.js: zero-JS default, faster on Pages, HTMX fallback for non-JS clients
@@ -34,7 +35,7 @@
 - 2026-08-19 — Biome v1.9.4 for lint/format, strict TS config with noUncheckedIndexedAccess
 - 2026-08-24 — CalendarGrid.tsx biome errors fixed (a11y + non-null assertion + index key + button type); state variables restored after Claude Code regression
 - 2026-08-24 — PublishQueueTable + DriftDetector components + publish-queue.astro page; biome-ignore added for astro frontmatter false-positive on workspaceId variable
-- 2026-08-25 — wrangler.toml: `d1_database` → `d1_databases` (wrangler v3 reject tunggal); KV id tidak boleh string kosong; [triggers] crons dihapus (Pages tidak dukung — scheduling via GitHub Actions)
+- 2026-08-25 — wrangler.toml: \`d1_database\` → \`d1_databases\` (wrangler v3 reject tunggal); KV id tidak boleh string kosong; [triggers] crons dihapus (Pages tidak dukung — scheduling via GitHub Actions)
 - 2026-08-25 — Script npm db:migrate:local/remote/create; migrations_dir = db/migrations
 - 2026-08-25 — LARANG Astro SSR adapter di proyek ini: _worker.js hasil build menimpa routing functions/ di Pages. Halaman guarded (calendar, publish-queue) = shell statis; auth/data via /api/* client-side. index.astro prerender.
 - 2026-08-25 — Pages config validation (wrangler v4) reject blok [triggers] dan [[durable_objects]] di wrangler.toml; drizzle-orm bundle import node:* → wajib compatibility_date >= 2024-09-23 + nodejs_compat
@@ -42,13 +43,14 @@
 - 2026-08-25 — DO via Worker terpisah: Pages tak bisa define class DO; worker/ (content-generator-queue) re-export Queue, migrasi new_sqlite_classes (free plan wajib sqlite), namespace f61618b2... dibind ke Pages sebagai QUEUE via API. Default export fetch handler wajib agar ES module format.
 - 2026-08-25 — Secrets OAuth GitHub ternyata sudah terpasang di prod (GITHUB_CLIENT_ID/SECRET); login 302 → github.com verified live.
 - 2026-08-25 — Fix CI intermittent ERESOLVE: drizzle-zod (tak pernah diimport) dihapus; @cloudflare/workers-types v4→v5 supaya match peer wrangler@4. Build Pages non-deterministik (sukses/gagal bergantian di commit sama) akar masalah ini.
-- 2026-08-27 — OAuth callback crypto fix: `crypto.subtle.sign('HMAC', ...)` bukan `'SHA-256'`; CryptoKey algorithm mismatch resolved (cad00ab)
-- 2026-08-27 — OAuth redirect: callback → `/sites` bukan `/` untuk langsung ke dashboard (fa5b3ac)
-- 2026-08-27 — D1 schema migration: `ALTER TABLE sites ADD COLUMN config_json TEXT` via wrangler d1 execute --remote (0.62ms, 1 row written)
-- 2026-08-27 — Project name correction: Pages project = `content-generator` (bukan `godev`); URL = apps.codevx.web.id; deploy 1a9e0c36 live
+- 2026-08-27 — OAuth callback crypto fix: \`crypto.subtle.sign('HMAC', ...)\` bukan \`'SHA-256'\`; CryptoKey algorithm mismatch resolved (cad00ab)
+- 2026-08-27 — OAuth redirect: callback → \`/sites\` bukan \`/\` untuk langsung ke dashboard (fa5b3ac)
+- 2026-08-27 — D1 schema migration: \`ALTER TABLE sites ADD COLUMN config_json TEXT\` via wrangler d1 execute --remote (0.62ms, 1 row written)
+- 2026-08-27 — Project name correction: Pages project = \`content-generator\` (bukan \`godev\`); URL = apps.codevx.web.id; deploy 1a9e0c36 live
 - 2026-08-28 — Phase numbering consolidation: TASK_LIST_v2.md created with linear 0-17 phases; agent.md updated; old fractional phases (9.1-9.6, 10.1b-10.5b, 5.4b, 11.1-11.3) merged into main phases 4-11; PRD traceability matrix added
 - 2026-08-31 — Fase 12 lint fix: Layout.astro (unused vars → _prefix), TodaySchedule.tsx (skeleton keys + self-closing), DashboardStats.tsx (skeleton keys + self-closing), Navigation.tsx (button type + SVG title), scheduled-today.ts & stats.ts (secret fallback); build verified, commit 9194837 pushed
 - 2026-08-31 — Fase 13 complete: Article Generation UI (PRD US-03); outline.ts/article.ts APIs, OutlineEditor/ArticleGenerator components fixed (className, For, type imports), generate.astro wired, calendar→generate navigation; lint+build verified, commit 25df0e0 pushed
+- 2026-08-31 — Fase 14 complete: Style DNA (PRD US-04); style-dna.ts (crawl WP/GitHub/sitemap, extract patterns, AI few-shot), style-dna API, StyleDNAPanel, SitesManager SolidJS migration; lint+build verified, commit 9d36b4c pushed
 
 ## Masalah yang Belum Terselesaikan
 - 9Router proxy configuration (port, API key) belum diverifikasi
