@@ -102,6 +102,22 @@ export const onRequest = async (context: {
             );
           }
         }
+
+        // Optional compliance injections (enabled per-site via config_json.compliance)
+        const complianceCfg = (siteCfg.compliance ?? {}) as Record<string, unknown>;
+        if (complianceCfg.enabled === true) {
+          const { runComplianceChecks } = await import('../../../src/lib/server/compliance/index');
+          const content = article.content_md ?? '';
+          const complianceResult = await runComplianceChecks(article.id, siteId, content, env);
+          if (complianceResult.content !== content) {
+            article.content_md = complianceResult.content;
+            await env.DB.prepare(
+              `UPDATE articles SET content_md = ?, updated_at = datetime('now') WHERE id = ?`,
+            )
+              .bind(complianceResult.content, article.id)
+              .run();
+          }
+        }
       }
 
       if (site?.type === 'blogger') {
