@@ -170,7 +170,7 @@
 
 ---
 
-## Fase 13 — Article Generation UI (PRD US-03) ⬜ PLANNED
+## Fase 13 — Article Generation UI (PRD US-03) ✅ Verified
 **Scope:** Outline editor → Review → Full article generation
 **Files:** `src/pages/generate.astro`, `src/components/OutlineEditor.tsx`, `src/components/ArticleGenerator.tsx`, `functions/api/generate/outline.ts`, `functions/api/generate/article.ts`
 **Tasks:**
@@ -236,7 +236,7 @@
 |----------|-----------|---------------------|--------|-------|
 | Epic 1   | US-01 Workspace | Fase 4 | ✅ | |
 | Epic 1   | US-02 Site Connect | Fase 5 | ✅ | |
-| Epic 2   | US-03 Generate Article | Fase 13 | ⬜ | Next major feature after Fase 12 |
+|| Epic 2   | US-03 Generate Article | Fase 13 | ✅ | Completed 2026-08-31 |
 | Epic 2   | US-04 Style DNA | Fase 14 | ⬜ | |
 | Epic 2   | US-05 Multi-model Routing | Fase 8 (partial) | ⚠️ Partial | Router exists, routing logic needs UI |
 | Epic 2   | US-06 Opportunity Radar | — | ⬜ | Not started |
