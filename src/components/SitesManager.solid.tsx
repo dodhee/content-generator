@@ -281,6 +281,7 @@ export function SitesManager(_props: { workspaceId: string }) {
               value={form().name}
               onInput={(e) => updateField('name', (e.target as HTMLInputElement).value)}
               required
+              autocomplete="text"
               class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
             />
           </div>
@@ -317,6 +318,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   value={form().wpUrl}
                   onInput={(e) => updateField('wpUrl', (e.target as HTMLInputElement).value)}
                   required
+                  autocomplete="url"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -330,6 +332,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   value={form().wpUsername}
                   onInput={(e) => updateField('wpUsername', (e.target as HTMLInputElement).value)}
                   required
+                  autocomplete="username"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -366,6 +369,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                     updateField('bloggerBlogId', (e.target as HTMLInputElement).value)
                   }
                   required
+                  autocomplete="text"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -381,6 +385,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                     updateField('bloggerRefreshToken', (e.target as HTMLInputElement).value)
                   }
                   required
+                  autocomplete="current-password"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -399,6 +404,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   value={form().githubRepo}
                   onInput={(e) => updateField('githubRepo', (e.target as HTMLInputElement).value)}
                   required
+                  autocomplete="text"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                   placeholder="owner/repo"
                 />
@@ -413,6 +419,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   value={form().githubBranch}
                   onInput={(e) => updateField('githubBranch', (e.target as HTMLInputElement).value)}
                   required
+                  autocomplete="text"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                   placeholder="main"
                 />
@@ -432,6 +439,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   value={form().webhookUrl}
                   onInput={(e) => updateField('webhookUrl', (e.target as HTMLInputElement).value)}
                   required
+                  autocomplete="url"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -446,6 +454,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                   onInput={(e) =>
                     updateField('webhookSecret', (e.target as HTMLInputElement).value)
                   }
+                  autocomplete="current-password"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
@@ -461,6 +470,7 @@ export function SitesManager(_props: { workspaceId: string }) {
               type="text"
               value={form().defaultCategory}
               onInput={(e) => updateField('defaultCategory', (e.target as HTMLInputElement).value)}
+              autocomplete="text"
               class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
             />
           </div>
