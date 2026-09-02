@@ -8,6 +8,7 @@ import * as authLogin from './api/auth/login';
 import * as authLogout from './api/auth/logout';
 import * as sitesId from './api/sites/[id]';
 import * as sitesIndex from './api/sites/index';
+import * as styleDna from './api/style-dna/index';
 import * as workspacesId from './api/workspaces/[id]';
 import * as workspacesIndex from './api/workspaces/index';
 
@@ -47,6 +48,13 @@ async function route(request: Request, env: Env): Promise<Response> {
     if (siteMatch) {
       return sitesId.onRequest({ request, env, params: { id: siteMatch[1] ?? '' } });
     }
+
+    // Style DNA routes
+    if (path === '/api/style-dna/analyze' && method === 'POST')
+      return styleDna.onRequest({ request, env });
+    if (path === '/api/style-dna/reanalyze' && method === 'POST')
+      return styleDna.onRequest({ request, env });
+    if (path === '/api/style-dna' && method === 'GET') return styleDna.onRequest({ request, env });
 
     return new Response(JSON.stringify({ error: 'API route not found' }), {
       status: 404,

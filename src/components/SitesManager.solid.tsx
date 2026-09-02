@@ -345,6 +345,7 @@ export function SitesManager(_props: { workspaceId: string }) {
                     updateField('wpAppPassword', (e.target as HTMLInputElement).value)
                   }
                   required
+                  autocomplete="current-password"
                   class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100"
                 />
               </div>
