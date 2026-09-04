@@ -329,7 +329,10 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
         }
       }),
     );
-    return pages.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    const validPosts = pages.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    if (validPosts.length > 0) return validPosts;
+    // All pages failed (CF challenge, etc) — try RSS content instead
+    return fetchRssContent(base);
   } catch (err) {
     console.warn('style-dna: sitemap crawl failed', err);
     return [];
