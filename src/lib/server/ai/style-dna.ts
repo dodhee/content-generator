@@ -10,6 +10,7 @@ const AI_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const SITEMAP_FETCH_LIMIT = 30;
 const FEW_SHOT_COUNT = 5;
+const MIN_CONTENT_LENGTH = 100; // lower threshold: 100 chars enough for pattern analysis
 
 export interface StyleExample {
   title: string;
@@ -107,6 +108,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 // ---- text utils ----
 
 function htmlToText(html: string): string {
+  // Detect CF challenge page
+  if (/challenge-platform|Just a moment|Enable JavaScript/i.test(html.slice(0, 2000))) {
+    return '';
+  }
   let t = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ');
   t = t.replace(
     /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi,
@@ -196,7 +201,7 @@ async function crawlWordPress(
       for (const p of data) {
         const html = p.content?.rendered ?? '';
         const content = htmlToText(html);
-        if (content.trim().length > 200) {
+        if (content.trim().length > MIN_CONTENT_LENGTH) {
           posts.push({
             title: p.title?.rendered || 'Untitled',
             content,
@@ -235,45 +240,63 @@ async function fetchSitemapUrls(base: string): Promise<string[]> {
       // Check if sitemap index (points to other sitemaps)
       const isIndex = /<sitemapindex/i.test(xml);
       if (isIndex) {
-        const subSitemaps = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+        const subSitemaps = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
         const allUrls: string[] = [];
         for (const sub of subSitemaps.slice(0, 5)) {
           try {
-            const subRes = await withTimeout(fetch(sub, {
+            const subRes = await withTimeout(fetch(sub!, {
               headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
             }), FETCH_TIMEOUT_MS);
             if (!subRes.ok) continue;
             const subXml = await subRes.text();
-            const urls = Array.from(subXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+            const urls = Array.from(subXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
             allUrls.push(...urls);
           } catch { /* skip sub-sitemap */ }
         }
         if (allUrls.length > 0) return allUrls;
       }
-      const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+      const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
       if (urls.length > 0) return urls;
     } catch { /* try next path */ }
   }
   return [];
 }
 
-async function fetchRssUrls(base: string): Promise<string[]> {
+async function fetchRssContent(base: string): Promise<PostContent[]> {
   const rssPaths = ['/rss.xml', '/feed.xml', '/rss/', '/feed/'];
   for (const rp of rssPaths) {
     try {
       const res = await withTimeout(fetch(`${base}${rp}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) StyleDNA/1.0' },
       }), FETCH_TIMEOUT_MS);
       if (!res.ok) continue;
       const xml = await res.text();
-      const urls = Array.from(xml.matchAll(/<link>([^<]+)<\/link>/g), (m) => m[1]).filter(Boolean);
-      // Remove RSS channel link (first <link> is usually the site itself)
-      const items = urls.filter((u) => u !== base && u !== `${base}/`);
-      if (items.length > 0) return items;
+      const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/gi));
+      if (items.length === 0) continue;
+
+      const posts: PostContent[] = [];
+      for (const match of items) {
+        const itemXml = match[1];
+        if (!itemXml) continue;
+        const title = itemXml.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
+        // Try content:encoded first (full content), fallback to description
+        let content = itemXml.match(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i)?.[1] ?? '';
+        if (!content || content.length < 50) {
+          content = itemXml.match(/<description[^>]*>([\s\S]*?)<\/description>/i)?.[1] ?? '';
+          // Decode HTML entities in description
+          content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'");
+        }
+        const text = htmlToText(content);
+        if (text.trim().length > MIN_CONTENT_LENGTH) {
+          posts.push({ title, content: text, headings: [] });
+        }
+      }
+      if (posts.length > 0) return posts;
     } catch { /* try next path */ }
   }
   return [];
-}
+} // end fetchRssContent
 
 async function crawlSitemap(base: string): Promise<PostContent[]> {
   try {
@@ -288,27 +311,8 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
       .slice(0, SITEMAP_FETCH_LIMIT);
 
     if (postUrls.length === 0) {
-      // Fallback to RSS
-      const rssUrls = await fetchRssUrls(base);
-      if (rssUrls.length > 0) {
-        const rssPostUrls = rssUrls.slice(0, SITEMAP_FETCH_LIMIT);
-        const pages = await Promise.all(
-          rssPostUrls.map(async (u) => {
-            try {
-              const pageRes = await withTimeout(fetch(u, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
-              }), FETCH_TIMEOUT_MS);
-              const html = await pageRes.text();
-              const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
-              return { title, content: htmlToText(html), headings: extractHtmlHeadings(html) };
-            } catch {
-              return null;
-            }
-          }),
-        );
-        return pages.filter((p): p is PostContent => p !== null && p.content.trim().length > 200);
-      }
-      return [];
+      // Fallback to RSS content extraction (no CF challenge)
+      return fetchRssContent(base);
     }
 
     const pages = await Promise.all(
@@ -325,7 +329,7 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
         }
       }),
     );
-    return pages.filter((p): p is PostContent => p !== null && p.content.trim().length > 200);
+    return pages.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
   } catch (err) {
     console.warn('style-dna: sitemap crawl failed', err);
     return [];
@@ -365,7 +369,7 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
         }
       }),
     );
-    return posts.filter((p): p is PostContent => p !== null && p.content.trim().length > 200);
+    return posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
   } catch (err) {
     console.warn('style-dna: GitHub crawl failed', err);
     return [];
@@ -383,7 +387,13 @@ async function crawlAll(
     };
   }
   if (site.wp_url) {
-    return crawlWordPress(site.wp_url, maxPosts);
+    const base = site.wp_url.replace(/\/+$/, '');
+    const result = await crawlWordPress(base, maxPosts);
+    if (result.posts.length > 0) return result;
+    // Final fallback: try RSS content extraction (handles Astro/static sites behind CF)
+    const rssPosts = await fetchRssContent(base);
+    if (rssPosts.length > 0) return { posts: rssPosts, source: 'rss' };
+    return { posts: [], source: 'none' };
   }
   return { posts: [], source: 'none' };
 }
