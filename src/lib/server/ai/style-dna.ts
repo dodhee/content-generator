@@ -280,9 +280,19 @@ async function fetchRssContent(base: string): Promise<PostContent[]> {
         if (!itemXml) continue;
         const title = itemXml.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
         // Try content:encoded first (full content), fallback to description
-        let content = itemXml.match(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i)?.[1] ?? '';
+        let content = '';
+        const ceMatch = itemXml.match(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i);
+        if (ceMatch) {
+          content = ceMatch[1] ?? '';
+          // Strip CDATA wrapper if present
+          content = content.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+        }
         if (!content || content.length < 50) {
-          content = itemXml.match(/<description[^>]*>([\s\S]*?)<\/description>/i)?.[1] ?? '';
+          const descMatch = itemXml.match(/<description[^>]*>([\s\S]*?)<\/description>/i);
+          if (descMatch) {
+            content = descMatch[1] ?? '';
+            content = content.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+          }
           // Decode HTML entities in description
           content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
             .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'");
