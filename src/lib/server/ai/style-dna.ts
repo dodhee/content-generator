@@ -184,7 +184,9 @@ async function crawlWordPress(
   try {
     for (let page = 1; page <= Math.ceil(maxPosts / 100); page++) {
       const url = `${base}/wp-json/wp/v2/posts?per_page=100&page=${page}&_fields=title,content&orderby=date&order=desc`;
-      const res = await withTimeout(fetch(url), FETCH_TIMEOUT_MS);
+      const res = await withTimeout(fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+      }), FETCH_TIMEOUT_MS);
       if (!res.ok) throw new Error(`WP REST HTTP ${res.status}`);
       const data = (await res.json()) as Array<{
         title?: { rendered?: string };
@@ -215,14 +217,67 @@ async function crawlWordPress(
   return { posts: posts.slice(0, maxPosts), source: 'wp-rest' };
 }
 
+async function fetchSitemapUrls(base: string): Promise<string[]> {
+  const sitemapPaths = [
+    '/sitemap.xml',
+    '/sitemap-index.xml',
+    '/sitemap_index.xml',
+    '/sitemap/sitemap.xml',
+    '/sitemap.xml.gz',
+  ];
+  for (const sp of sitemapPaths) {
+    try {
+      const res = await withTimeout(fetch(`${base}${sp}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+      }), FETCH_TIMEOUT_MS);
+      if (!res.ok) continue;
+      const xml = await res.text();
+      // Check if sitemap index (points to other sitemaps)
+      const isIndex = /<sitemapindex/i.test(xml);
+      if (isIndex) {
+        const subSitemaps = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+        const allUrls: string[] = [];
+        for (const sub of subSitemaps.slice(0, 5)) {
+          try {
+            const subRes = await withTimeout(fetch(sub, {
+              headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+            }), FETCH_TIMEOUT_MS);
+            if (!subRes.ok) continue;
+            const subXml = await subRes.text();
+            const urls = Array.from(subXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+            allUrls.push(...urls);
+          } catch { /* skip sub-sitemap */ }
+        }
+        if (allUrls.length > 0) return allUrls;
+      }
+      const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(Boolean);
+      if (urls.length > 0) return urls;
+    } catch { /* try next path */ }
+  }
+  return [];
+}
+
+async function fetchRssUrls(base: string): Promise<string[]> {
+  const rssPaths = ['/rss.xml', '/feed.xml', '/rss/', '/feed/'];
+  for (const rp of rssPaths) {
+    try {
+      const res = await withTimeout(fetch(`${base}${rp}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+      }), FETCH_TIMEOUT_MS);
+      if (!res.ok) continue;
+      const xml = await res.text();
+      const urls = Array.from(xml.matchAll(/<link>([^<]+)<\/link>/g), (m) => m[1]).filter(Boolean);
+      // Remove RSS channel link (first <link> is usually the site itself)
+      const items = urls.filter((u) => u !== base && u !== `${base}/`);
+      if (items.length > 0) return items;
+    } catch { /* try next path */ }
+  }
+  return [];
+}
+
 async function crawlSitemap(base: string): Promise<PostContent[]> {
   try {
-    const res = await withTimeout(fetch(`${base}/sitemap.xml`), FETCH_TIMEOUT_MS);
-    if (!res.ok) throw new Error(`Sitemap HTTP ${res.status}`);
-    const xml = await res.text();
-    const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g))
-      .map((m) => m[1] ?? '')
-      .filter(Boolean);
+    const urls = await fetchSitemapUrls(base);
     const postUrls = urls
       .filter((u) => {
         const path = u.replace(/\/+$/, '');
@@ -232,10 +287,36 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
       })
       .slice(0, SITEMAP_FETCH_LIMIT);
 
+    if (postUrls.length === 0) {
+      // Fallback to RSS
+      const rssUrls = await fetchRssUrls(base);
+      if (rssUrls.length > 0) {
+        const rssPostUrls = rssUrls.slice(0, SITEMAP_FETCH_LIMIT);
+        const pages = await Promise.all(
+          rssPostUrls.map(async (u) => {
+            try {
+              const pageRes = await withTimeout(fetch(u, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+              }), FETCH_TIMEOUT_MS);
+              const html = await pageRes.text();
+              const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
+              return { title, content: htmlToText(html), headings: extractHtmlHeadings(html) };
+            } catch {
+              return null;
+            }
+          }),
+        );
+        return pages.filter((p): p is PostContent => p !== null && p.content.trim().length > 200);
+      }
+      return [];
+    }
+
     const pages = await Promise.all(
       postUrls.map(async (u) => {
         try {
-          const pageRes = await withTimeout(fetch(u), FETCH_TIMEOUT_MS);
+          const pageRes = await withTimeout(fetch(u, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+          }), FETCH_TIMEOUT_MS);
           const html = await pageRes.text();
           const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
           return { title, content: htmlToText(html), headings: extractHtmlHeadings(html) };
