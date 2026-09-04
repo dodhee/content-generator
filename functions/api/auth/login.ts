@@ -9,7 +9,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   }
 
   const state = crypto.randomUUID();
-  const redirectUri = `${new URL(context.request.url).origin}/api/auth/callback`;
+  const redirectUri = 'https://apps.codevx.web.id/api/auth/callback';
 
   const authUrl = new URL('https://github.com/login/oauth/authorize');
   authUrl.searchParams.set('client_id', clientId);

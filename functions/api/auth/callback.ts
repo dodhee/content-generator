@@ -49,7 +49,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       client_id: env.GITHUB_CLIENT_ID,
       client_secret: clientSecret,
       code,
-      redirect_uri: `${url.origin}/api/auth/callback`,
+      redirect_uri: 'https://apps.codevx.web.id/api/auth/callback',
     }),
   });
 
