@@ -148,7 +148,6 @@ async function callNousPortal(env: Env, options: RouterOptions): Promise<RouterR
   }
 
   const baseUrl = env.NOUS_BASE_URL || 'https://inference-api.nousresearch.com/v1';
-  const model = options.model || 'poolside/laguna-s-2.1:free';
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
@@ -157,7 +156,7 @@ async function callNousPortal(env: Env, options: RouterOptions): Promise<RouterR
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model,
+      model: options.model || 'upstage/solar-pro4:free',
       messages: options.messages,
       temperature: options.temperature ?? 0.7,
       max_tokens: options.max_tokens ?? 4000,
@@ -173,7 +172,7 @@ async function callNousPortal(env: Env, options: RouterOptions): Promise<RouterR
   const data = await response.json();
   return {
     content: data.choices?.[0]?.message?.content || '',
-    model: data.model || model,
+    model: data.model || options.model || 'upstage/solar-pro4:free',
     usage: data.usage,
   };
 }
