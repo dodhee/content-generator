@@ -141,6 +141,62 @@ async function callNineRouter(env: Env, options: RouterOptions): Promise<RouterR
   };
 }
 
+async function callNousPortal(env: Env, options: RouterOptions): Promise<RouterResponse> {
+  const apiKey = env.NOUS_API_KEY;
+  if (!apiKey) {
+    throw new Error('Nous Portal API key not configured');
+  }
+
+  const baseUrl = env.NOUS_BASE_URL || 'https://inference-api.nousresearch.com/v1';
+  const model = options.model || 'poolside/laguna-s-2.1:free';
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: options.messages,
+      temperature: options.temperature ?? 0.7,
+      max_tokens: options.max_tokens ?? 4000,
+      stream: options.stream ?? false,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Nous Portal error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  return {
+    content: data.choices?.[0]?.message?.content || '',
+    model: data.model || model,
+    usage: data.usage,
+  };
+}
+
+export async function callRouter(env: Env, options: RouterOptions): Promise<RouterResponse> {
+  // Try 9Router first (free, local)
+  try {
+    return await callNineRouter(env, options);
+  } catch (err) {
+    console.warn('9Router failed, falling back to Nous Portal:', err);
+  }
+
+  // Fallback to Nous Portal (Poolside Laguna S 2.1 free)
+  try {
+    return await callNousPortal(env, options);
+  } catch (err) {
+    console.warn('Nous Portal failed, falling back to OpenRouter:', err);
+  }
+
+  // Final fallback to OpenRouter
+  return callOpenRouter(env, options);
+}
+
 async function callOpenRouter(env: Env, options: RouterOptions): Promise<RouterResponse> {
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -175,18 +231,6 @@ async function callOpenRouter(env: Env, options: RouterOptions): Promise<RouterR
     model: data.model || options.model || 'anthropic/claude-3.5-sonnet',
     usage: data.usage,
   };
-}
-
-export async function callRouter(env: Env, options: RouterOptions): Promise<RouterResponse> {
-  // Try 9Router first (free, local)
-  try {
-    return await callNineRouter(env, options);
-  } catch (err) {
-    console.warn('9Router failed, falling back to OpenRouter:', err);
-  }
-
-  // Fallback to OpenRouter
-  return callOpenRouter(env, options);
 }
 
 function buildOutlinePrompt(

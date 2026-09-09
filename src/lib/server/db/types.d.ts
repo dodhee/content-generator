@@ -56,6 +56,8 @@ interface Env {
   QUEUE: DurableObjectNamespace;
   NINE_ROUTER_API_KEY?: string;
   NINE_ROUTER_BASE_URL?: string;
+  NOUS_API_KEY?: string;
+  NOUS_BASE_URL?: string;
   OPENROUTER_API_KEY?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;

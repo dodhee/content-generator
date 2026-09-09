@@ -17,6 +17,8 @@ export interface Env {
   QUEUE: DurableObjectNamespace;
   // AI model configs (set via Pages Dashboard → Settings → Variables)
   NINE_ROUTER_API_KEY?: string;
+  NOUS_API_KEY?: string;
+  NOUS_BASE_URL?: string;
   OPENROUTER_API_KEY?: string;
   // OAuth (set via Pages Dashboard → Settings → Secrets)
   GITHUB_CLIENT_ID?: string;

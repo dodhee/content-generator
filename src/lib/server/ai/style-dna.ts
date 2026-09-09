@@ -190,9 +190,12 @@ async function crawlWordPress(
   try {
     for (let page = 1; page <= Math.ceil(maxPosts / 100); page++) {
       const url = `${base}/wp-json/wp/v2/posts?per_page=100&page=${page}&_fields=title,content&orderby=date&order=desc`;
-      const res = await withTimeout(fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
-      }), FETCH_TIMEOUT_MS);
+      const res = await withTimeout(
+        fetch(url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+        }),
+        FETCH_TIMEOUT_MS,
+      );
       if (!res.ok) throw new Error(`WP REST HTTP ${res.status}`);
       const data = (await res.json()) as Array<{
         title?: { rendered?: string };
@@ -233,32 +236,50 @@ async function fetchSitemapUrls(base: string): Promise<string[]> {
   ];
   for (const sp of sitemapPaths) {
     try {
-      const res = await withTimeout(fetch(`${base}${sp}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
-      }), FETCH_TIMEOUT_MS);
+      const res = await withTimeout(
+        fetch(`${base}${sp}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+        }),
+        FETCH_TIMEOUT_MS,
+      );
       if (!res.ok) continue;
       const xml = await res.text();
       // Check if sitemap index (points to other sitemaps)
       const isIndex = /<sitemapindex/i.test(xml);
       if (isIndex) {
-        const subSitemaps = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
+        const subSitemaps = Array.from(
+          xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g),
+          (m) => m[1],
+        ).filter((u): u is string => !!u);
         const allUrls: string[] = [];
         for (const sub of subSitemaps.slice(0, 5)) {
           try {
-            const subRes = await withTimeout(fetch(sub!, {
-              headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
-            }), FETCH_TIMEOUT_MS);
+            const subRes = await withTimeout(
+              fetch(sub, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+              }),
+              FETCH_TIMEOUT_MS,
+            );
             if (!subRes.ok) continue;
             const subXml = await subRes.text();
-            const urls = Array.from(subXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
+            const urls = Array.from(
+              subXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g),
+              (m) => m[1],
+            ).filter((u): u is string => !!u);
             allUrls.push(...urls);
-          } catch { /* skip sub-sitemap */ }
+          } catch {
+            /* skip sub-sitemap */
+          }
         }
         if (allUrls.length > 0) return allUrls;
       }
-      const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter((u): u is string => !!u);
+      const urls = Array.from(xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g), (m) => m[1]).filter(
+        (u): u is string => !!u,
+      );
       if (urls.length > 0) return urls;
-    } catch { /* try next path */ }
+    } catch {
+      /* try next path */
+    }
   }
   return [];
 }
@@ -267,9 +288,12 @@ async function fetchRssContent(base: string): Promise<PostContent[]> {
   const rssPaths = ['/rss.xml', '/feed.xml', '/rss/', '/feed/'];
   for (const rp of rssPaths) {
     try {
-      const res = await withTimeout(fetch(`${base}${rp}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) StyleDNA/1.0' },
-      }), FETCH_TIMEOUT_MS);
+      const res = await withTimeout(
+        fetch(`${base}${rp}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) StyleDNA/1.0' },
+        }),
+        FETCH_TIMEOUT_MS,
+      );
       if (!res.ok) continue;
       const xml = await res.text();
       const items = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/gi));
@@ -295,8 +319,12 @@ async function fetchRssContent(base: string): Promise<PostContent[]> {
             content = content.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
           }
           // Decode HTML entities in description
-          content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-            .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'");
+          content = content
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#0?39;|&apos;/g, "'");
         }
         const text = htmlToText(content);
         if (text.trim().length > MIN_RSS_CONTENT_LENGTH) {
@@ -304,7 +332,9 @@ async function fetchRssContent(base: string): Promise<PostContent[]> {
         }
       }
       if (posts.length > 0) return posts;
-    } catch { /* try next path */ }
+    } catch {
+      /* try next path */
+    }
   }
   return [];
 } // end fetchRssContent
@@ -329,9 +359,12 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
     const pages = await Promise.all(
       postUrls.map(async (u) => {
         try {
-          const pageRes = await withTimeout(fetch(u, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
-          }), FETCH_TIMEOUT_MS);
+          const pageRes = await withTimeout(
+            fetch(u, {
+              headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleDNA/1.0)' },
+            }),
+            FETCH_TIMEOUT_MS,
+          );
           const html = await pageRes.text();
           const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? 'Untitled';
           return { title, content: htmlToText(html), headings: extractHtmlHeadings(html) };
@@ -340,7 +373,9 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
         }
       }),
     );
-    const validPosts = pages.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    const validPosts = pages.filter(
+      (p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH,
+    );
     if (validPosts.length > 0) return validPosts;
     // All pages failed (CF challenge, etc) — try RSS content instead
     return fetchRssContent(base);
@@ -384,7 +419,9 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
         }
       }),
     );
-    const valid = posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    const valid = posts.filter(
+      (p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH,
+    );
     if (valid.length > 0) return valid;
   } catch (err) {
     console.warn('style-dna: GitHub API crawl failed', err);
@@ -392,7 +429,7 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
 
   // Fallback: raw.githubusercontent.com (bypasses API rate limits)
   try {
-    const base = `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
+    const _base = `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
     // Need to get file list first - use tree API or known files
     // For now, try fetching tree to get file list
     const treeRes = await withTimeout(
@@ -404,14 +441,19 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
     if (treeRes.ok) {
       const tree = (await treeRes.json()) as { tree?: Array<{ path?: string; type?: string }> };
       const mdFiles = (tree.tree ?? [])
-        .filter((f) => f.type === 'blob' && f.path?.startsWith(path) && /\.(md|mdx)$/i.test(f.path ?? ''))
+        .filter(
+          (f) => f.type === 'blob' && f.path?.startsWith(path) && /\.(md|mdx)$/i.test(f.path ?? ''),
+        )
         .slice(0, MAX_POSTS);
 
       const posts = await Promise.all(
         mdFiles.map(async (f) => {
           try {
             if (!f.path) return null;
-            const rawRes = await withTimeout(fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${f.path}`), FETCH_TIMEOUT_MS);
+            const rawRes = await withTimeout(
+              fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${f.path}`),
+              FETCH_TIMEOUT_MS,
+            );
             const raw = await rawRes.text();
             return {
               title: f.path.split('/').pop() ?? 'Untitled',
@@ -423,7 +465,9 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
           }
         }),
       );
-      return posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+      return posts.filter(
+        (p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH,
+      );
     }
   } catch (err) {
     console.warn('style-dna: raw.githubusercontent.com fallback failed', err);
