@@ -11,6 +11,7 @@ const FETCH_TIMEOUT_MS = 15_000;
 const SITEMAP_FETCH_LIMIT = 30;
 const FEW_SHOT_COUNT = 5;
 const MIN_CONTENT_LENGTH = 100; // lower threshold: 100 chars enough for pattern analysis
+const MIN_RSS_CONTENT_LENGTH = 50; // RSS descriptions often shorter
 
 export interface StyleExample {
   title: string;
@@ -298,7 +299,7 @@ async function fetchRssContent(base: string): Promise<PostContent[]> {
             .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'");
         }
         const text = htmlToText(content);
-        if (text.trim().length > MIN_CONTENT_LENGTH) {
+        if (text.trim().length > MIN_RSS_CONTENT_LENGTH) {
           posts.push({ title, content: text, headings: [] });
         }
       }
@@ -350,6 +351,7 @@ async function crawlSitemap(base: string): Promise<PostContent[]> {
 }
 
 async function crawlGitHub(repo: string, branch: string, path: string): Promise<PostContent[]> {
+  // Try GitHub API first
   try {
     const headers = { Accept: 'application/vnd.github+json' };
     const res = await withTimeout(
@@ -382,11 +384,52 @@ async function crawlGitHub(repo: string, branch: string, path: string): Promise<
         }
       }),
     );
-    return posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    const valid = posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    if (valid.length > 0) return valid;
   } catch (err) {
-    console.warn('style-dna: GitHub crawl failed', err);
-    return [];
+    console.warn('style-dna: GitHub API crawl failed', err);
   }
+
+  // Fallback: raw.githubusercontent.com (bypasses API rate limits)
+  try {
+    const base = `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
+    // Need to get file list first - use tree API or known files
+    // For now, try fetching tree to get file list
+    const treeRes = await withTimeout(
+      fetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      }),
+      FETCH_TIMEOUT_MS,
+    );
+    if (treeRes.ok) {
+      const tree = (await treeRes.json()) as { tree?: Array<{ path?: string; type?: string }> };
+      const mdFiles = (tree.tree ?? [])
+        .filter((f) => f.type === 'blob' && f.path?.startsWith(path) && /\.(md|mdx)$/i.test(f.path ?? ''))
+        .slice(0, MAX_POSTS);
+
+      const posts = await Promise.all(
+        mdFiles.map(async (f) => {
+          try {
+            if (!f.path) return null;
+            const rawRes = await withTimeout(fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${f.path}`), FETCH_TIMEOUT_MS);
+            const raw = await rawRes.text();
+            return {
+              title: f.path.split('/').pop() ?? 'Untitled',
+              content: markdownToText(raw),
+              headings: extractMarkdownHeadings(raw),
+            };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      return posts.filter((p): p is PostContent => p !== null && p.content.trim().length > MIN_CONTENT_LENGTH);
+    }
+  } catch (err) {
+    console.warn('style-dna: raw.githubusercontent.com fallback failed', err);
+  }
+
+  return [];
 }
 
 async function crawlAll(
@@ -394,10 +437,14 @@ async function crawlAll(
   maxPosts: number,
 ): Promise<{ posts: PostContent[]; source: string }> {
   if (site.github_repo) {
-    return {
-      posts: await crawlGitHub(site.github_repo, site.github_branch, site.github_content_path),
-      source: 'github',
-    };
+    const posts = await crawlGitHub(site.github_repo, site.github_branch, site.github_content_path);
+    if (posts.length > 0) return { posts, source: 'github' };
+    // GitHub failed (rate limit, no files, etc) — try RSS if we have a URL
+    if (site.wp_url) {
+      const rssPosts = await fetchRssContent(site.wp_url.replace(/\/+$/, ''));
+      if (rssPosts.length > 0) return { posts: rssPosts, source: 'rss' };
+    }
+    return { posts: [], source: 'none' };
   }
   if (site.wp_url) {
     const base = site.wp_url.replace(/\/+$/, '');
